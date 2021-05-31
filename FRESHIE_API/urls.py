@@ -16,13 +16,16 @@ Including another URLconf
 from django.contrib import admin
 from django.contrib.auth import views
 from django.urls import path, include
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators import csrf
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from API import views as apiview
 from django.conf.urls import url
 from rest_auth.views import (
     LoginView, LogoutView, UserDetailsView, PasswordChangeView,
     PasswordResetView, PasswordResetConfirmView
 )
+from rest_auth.registration import views as raview 
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -37,5 +40,8 @@ urlpatterns = [
         name='rest_password_reset_confirm'),
     url(r'^password/change/$', PasswordChangeView.as_view(),
         name='rest_password_change'),
-    url(r'^register/',include('rest_auth.registration.urls')),
+    url(r'register/$', csrf_exempt(apiview.RegistrationViewCustom.as_view()), name='rest_register'),
+    url(r'^verify-email/$', raview.VerifyEmailView.as_view(), name='rest_verify_email'),
+    url(r'^account-confirm-email/(?P<key>[-:\w]+)/$', TemplateView.as_view(),
+        name='account_confirm_email'),
 ]

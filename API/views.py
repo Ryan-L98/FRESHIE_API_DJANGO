@@ -16,7 +16,7 @@ from django.contrib.auth import views
 from django.utils.decorators import method_decorator
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticatedOrReadOnly, BasePermission, IsAdminUser, DjangoModelPermissions
 from rest_framework.authentication import TokenAuthentication
-from rest_auth.registration.views import LoginView
+from rest_auth.registration.views import LoginView, RegisterView
 
 #region RECIPES
 
@@ -65,4 +65,8 @@ class calorieView(generics.RetrieveUpdateAPIView, CalorieUserWritePermission):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginViewCustom(LoginView):
+    authentication_classes = (TokenAuthentication,)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class RegistrationViewCustom(RegisterView):
     authentication_classes = (TokenAuthentication,)
