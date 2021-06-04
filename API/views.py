@@ -3,6 +3,7 @@ from django.db.models import fields
 from django.db.models.query import QuerySet
 from django.http import request
 from django.http.response import Http404
+from rest_auth.views import UserDetailsView
 from rest_framework import permissions
 from API.models import Recipe
 from django.shortcuts import render
@@ -10,6 +11,7 @@ from rest_framework import serializers, status
 from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
 from . import serializers
 from . import models
 from django.views.decorators.csrf import csrf_exempt
@@ -35,6 +37,7 @@ class recipeList(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = models.Recipe.objects.all()
     serializer_class = serializers.RecipeSerializer
+    name = 'recipe-list'
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -45,6 +48,7 @@ class recipeDetails(generics.RetrieveUpdateDestroyAPIView, RecipeUserWritePermis
     permission_classes = [RecipeUserWritePermission]
     queryset = models.Recipe.objects.all()
     serializer_class = serializers.RecipeSerializer
+    name = 'recipe-details'
 #endregion
 
 #region CALORIES
@@ -62,6 +66,7 @@ class calorieView(generics.RetrieveUpdateAPIView, CalorieUserWritePermission):
     serializer_class = serializers.CalorieSerializer
     lookup_field = 'user'
     lookup_url_kwarg = 'username'
+    name = 'calories'
 
 #endregion
 
@@ -69,10 +74,15 @@ class calorieView(generics.RetrieveUpdateAPIView, CalorieUserWritePermission):
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginViewCustom(LoginView):
     authentication_classes = (TokenAuthentication,)
+    name = 'rest_login'
 
 @method_decorator(csrf_exempt, name='dispatch')
 class RegistrationViewCustom(RegisterView):
     authentication_classes = (TokenAuthentication,)
+    name = 'rest_register'
+
+class UserDetailsViewCustom(UserDetailsView):
+    name = 'rest_user_details'
 #endregion
 
 #region consumedMeals view
@@ -88,9 +98,31 @@ class consumedMealsView(generics.ListCreateAPIView, consumedMealsUserWritePermis
     serializer_class = serializers.consumedMealsSerializer
     lookup_field = 'user'
     lookup_url_kwarg = 'username'
+    name = 'consumed-meals'
 
 @method_decorator(csrf_exempt, name='dispatch')
 class consumedMealsDeleteView(generics.RetrieveDestroyAPIView, consumedMealsUserWritePermission):
     permission_classes = [consumedMealsUserWritePermission]
     queryset = models.consumedMeals.objects.all()
     serializer_class = serializers.consumedMealsSerializer
+    name = 'delete-meal'
+
+#endregion
+
+#region API urls
+class index(generics.GenericAPIView):
+    name = 'index'
+    def get(self, request, *args, **kawrgs):
+        return Response({
+            'links below': "Do not require login to view :",
+            'login' : reverse(LoginViewCustom.name, request=request),
+            'register' : reverse(RegistrationViewCustom.name, request=request),
+            'recipelist' : reverse(recipeList.name, request=request),
+            'recipe details' : '/api/recipes/<pk>',
+            '' : '',
+            '' : '', 
+            'links below' : 'Require login to view', 
+            'user view' : reverse(UserDetailsViewCustom.name, request=request), 
+            'calories' : '/api/<username>/calories/',
+            'consumed meals' : '/api/<username>/consumed-meals/  <-- add id to end for delete view'
+        }) 
