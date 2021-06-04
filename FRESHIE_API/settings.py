@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-f=j@hpgslv56!6%t$4rla0zd-29+myjii^3(3&p1z$w$+6tv&-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['freshie-api.herokuapp.com/', '127.0.0.1']
+ALLOWED_HOSTS = ['freshie-api.herokuapp.com', '127.0.0.1']
 
 
 # Application definition
