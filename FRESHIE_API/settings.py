@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-f=j@hpgslv56!6%t$4rla0zd-29+myjii^3(3&p1z$w$+6tv&-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.86.250',]
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -48,11 +48,24 @@ INSTALLED_APPS = [
     'rest_auth',
     'allauth',
     'allauth.account',
+    'allauth.socialaccount',
     'rest_auth.registration',
+    'allauth.socialaccount.providers.github',
 
     #Local apps
     'API',
 ]
+
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+)
+
+ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = False
+
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+LOGIN_REDIRECT_URL = 'user'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' 
 

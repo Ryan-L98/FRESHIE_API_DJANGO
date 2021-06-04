@@ -18,3 +18,9 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = '__all__'
+
+class consumedMealsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.consumedMeals
+        fields = '__all__'
+        depth = 1

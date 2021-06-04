@@ -1,6 +1,7 @@
 from django.contrib import admin
-from .models import Calories, Recipe
+from . import models
 
-admin.site.register(Recipe)
-admin.site.register(Calories)
+admin.site.register(models.Recipe)
+admin.site.register(models.Calories)
+admin.site.register(models.consumedMeals)
 

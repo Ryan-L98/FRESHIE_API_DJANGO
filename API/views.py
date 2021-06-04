@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db.models import fields
+from django.db.models.query import QuerySet
 from django.http import request
 from django.http.response import Http404
 from rest_framework import permissions
@@ -29,6 +30,7 @@ class RecipeUserWritePermission(BasePermission):
         return obj.author == request.user
 
 #Recipe list view
+@method_decorator(csrf_exempt, name='dispatch')
 class recipeList(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = models.Recipe.objects.all()
@@ -38,6 +40,7 @@ class recipeList(generics.ListCreateAPIView):
         serializer.save(author=self.request.user)
 
 #Recipe Details view
+@method_decorator(csrf_exempt, name='dispatch')
 class recipeDetails(generics.RetrieveUpdateDestroyAPIView, RecipeUserWritePermission):
     permission_classes = [RecipeUserWritePermission]
     queryset = models.Recipe.objects.all()
@@ -52,6 +55,7 @@ class CalorieUserWritePermission(BasePermission):
         return obj.user == request.user
 
 #Calorie view
+@method_decorator(csrf_exempt, name='dispatch')
 class calorieView(generics.RetrieveUpdateAPIView, CalorieUserWritePermission):
     permission_classes = [CalorieUserWritePermission]
     queryset = models.Calories.objects.all()
@@ -61,8 +65,7 @@ class calorieView(generics.RetrieveUpdateAPIView, CalorieUserWritePermission):
 
 #endregion
 
-# myapp.views.py
-
+#region Overriden user views
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginViewCustom(LoginView):
     authentication_classes = (TokenAuthentication,)
@@ -70,3 +73,24 @@ class LoginViewCustom(LoginView):
 @method_decorator(csrf_exempt, name='dispatch')
 class RegistrationViewCustom(RegisterView):
     authentication_classes = (TokenAuthentication,)
+#endregion
+
+#region consumedMeals view
+class consumedMealsUserWritePermission(BasePermission):
+    message = 'Editing consumed meals is restricted to assigned user only.'
+    def has_object_permission(self, request, view, obj):
+        return obj.user == request.user
+
+@method_decorator(csrf_exempt, name='dispatch')
+class consumedMealsView(generics.ListCreateAPIView, consumedMealsUserWritePermission):
+    permission_classes = [consumedMealsUserWritePermission]
+    queryset = models.consumedMeals.objects.all()
+    serializer_class = serializers.consumedMealsSerializer
+    lookup_field = 'user'
+    lookup_url_kwarg = 'username'
+
+@method_decorator(csrf_exempt, name='dispatch')
+class consumedMealsDeleteView(generics.RetrieveDestroyAPIView, consumedMealsUserWritePermission):
+    permission_classes = [consumedMealsUserWritePermission]
+    queryset = models.consumedMeals.objects.all()
+    serializer_class = serializers.consumedMealsSerializer
