@@ -1,0 +1,1 @@
+web: gunicorn FRESHIE_API.wsgi --log-file -
