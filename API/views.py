@@ -120,7 +120,7 @@ class index(generics.GenericAPIView):
             'recipelist' : reverse(recipeList.name, request=request),
             'recipe details' : '/api/recipes/<pk>',
             '' : '',
-            'links below' : 'Require login to view', 
+            'links at da bottom' : 'Require login to view', 
             'user view' : reverse(UserDetailsViewCustom.name, request=request), 
             'calories' : '/api/<username>/calories/',
             'consumed meals' : '/api/<username>/consumed-meals/  <-- add id to end for delete view'
