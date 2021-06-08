@@ -32,8 +32,12 @@ class RecipeUserWritePermission(BasePermission):
         return obj.author == request.user
 
 #Recipe list view
-@method_decorator(csrf_exempt, name='dispatch')
+#@method_decorator(csrf_exempt, name='dispatch')
 class recipeList(generics.ListCreateAPIView):
+    @csrf_exempt
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
     permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = models.Recipe.objects.all()
     serializer_class = serializers.RecipeSerializer
@@ -125,3 +129,4 @@ class index(generics.GenericAPIView):
             'calories' : '/api/<username>/calories/',
             'consumed meals' : '/api/<username>/consumed-meals/  <-- add id to end for delete view'
         }) 
+#endregion

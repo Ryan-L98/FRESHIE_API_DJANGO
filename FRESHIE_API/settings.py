@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-f=j@hpgslv56!6%t$4rla0zd-29+myjii^3(3&p1z$w$+6tv&-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['freshie-api.herokuapp.com', '127.0.0.1']
+ALLOWED_HOSTS = ['freshie-api.herokuapp.com', '172.25.99.7']
 
 
 # Application definition
@@ -64,8 +64,6 @@ AUTHENTICATION_BACKENDS = (
 ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = False
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'
-
-LOGIN_REDIRECT_URL = 'user'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' 
 
@@ -156,7 +154,16 @@ STATIC_URL = '/static/'
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
+    ] ,
+
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
     ]
+}
+
+#rest auth serializer custom paths
+REST_AUTH_SERIALIZERS = {
+    'TOKEN_SERIALIZER': 'API.models.CustomTokenSerializer' # import path to CustomTokenSerializer defined above.
 }
 
 # Default primary key field type

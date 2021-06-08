@@ -3,8 +3,10 @@ from django.contrib.auth.models import User
 from django.db.models.deletion import CASCADE, PROTECT
 from django.db.models.fields import BLANK_CHOICE_DASH, IntegerField
 from django.db.models.signals import post_save
+from rest_auth.models import TokenModel
 from django.dispatch import receiver
 from rest_framework.fields import CurrentUserDefault
+from rest_framework import serializers
 
 # Create your models here.
 
@@ -31,3 +33,9 @@ def userCalorie(sender, instance, created, **kwargs):
         user_calorie = Calories.objects.create(user=instance)
         user_calorie.save()
 
+class CustomTokenSerializer(serializers.ModelSerializer):
+    user = serializers.CurrentUserDefault()
+    class Meta:
+        model = TokenModel
+        fields = ('key', 'user',)
+        depth = 1
