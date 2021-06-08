@@ -1,10 +1,13 @@
 from django.contrib.auth.models import User
-from django.db.models import fields
+from django.utils import timezone, dateformat   
+from django.db.models import fields, manager
 from django.db.models.query import QuerySet
 from django.http import request
-from django.http.response import Http404
+from django.http.response import Http404, HttpResponse
 from rest_auth.views import UserDetailsView
+from datetime import date
 from rest_framework import permissions
+from rest_framework.fields import CurrentUserDefault
 from API.models import Recipe
 from django.shortcuts import render
 from rest_framework import serializers, status
@@ -37,7 +40,6 @@ class recipeList(generics.ListCreateAPIView):
     @csrf_exempt
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
-
     permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = models.Recipe.objects.all()
     serializer_class = serializers.RecipeSerializer
@@ -95,14 +97,33 @@ class consumedMealsUserWritePermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.user == request.user
 
-@method_decorator(csrf_exempt, name='dispatch')
-class consumedMealsView(generics.ListCreateAPIView, consumedMealsUserWritePermission):
-    permission_classes = [consumedMealsUserWritePermission]
-    queryset = models.consumedMeals.objects.all()
-    serializer_class = serializers.consumedMealsSerializer
-    lookup_field = 'user'
-    lookup_url_kwarg = 'username'
-    name = 'consumed-meals'
+# @method_decorator(csrf_exempt, name='dispatch')
+# class consumedMealsView(generics.ListCreateAPIView, consumedMealsUserWritePermission):
+#     def list(self, request, *args, **kwargs):
+#         queryset = self.filter_queryset(self.get_queryset())
+#         queryset = queryset.filter(user= request.user)
+#         page = self.paginate_queryset(queryset)
+#         if page is not None:
+#             serializer = self.get_serializer(page, many=True)
+#             return self.get_paginated_response(serializer.data)
+
+#         serializer = self.get_serializer(queryset, many=True)
+#         return Response(serializer.data)
+#     queryset = models.consumedMeals.objects.all()
+#     permission_classes = [consumedMealsUserWritePermission]
+#     serializer_class = serializers.consumedMealsSerializer
+#     lookup_field = 'user'
+#     lookup_url_kwarg = 'username'
+#     name = 'consumed-meals'
+
+@api_view(["GET"])
+def getConsumedMealsToday(request, username):
+    if request.user.username != username:
+        return Response("INVALID USER", status=404)
+    queryset = models.consumedMeals.objects.filter(user__username= username, date=timezone.now().date())
+    serializer = serializers.consumedMealsSerializer(queryset, many=True)
+    return Response(serializer.data)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class consumedMealsDeleteView(generics.RetrieveDestroyAPIView, consumedMealsUserWritePermission):
