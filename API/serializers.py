@@ -9,6 +9,13 @@ class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Recipe
         fields = '__all__'
+
+class favouriteMealsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.favouriteMeals
+        fields = '__all__'
+        depth = 1
+
 class CalorieSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Calories

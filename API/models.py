@@ -26,10 +26,14 @@ class Calories(models.Model):
     user = models.OneToOneField(User, on_delete=CASCADE, null=False, to_field='username')
 
 class consumedMeals(models.Model):
-    meal = models.ForeignKey(Recipe, on_delete=PROTECT)
+    meal = models.ForeignKey(Recipe, on_delete=CASCADE)
     user = models.ForeignKey(User, on_delete=CASCADE, to_field='username')
     mealType = models.CharField(max_length=15, blank=True)
     date = models.DateField(blank=True, auto_now_add=True)
+
+class favouriteMeals(models.Model):
+    meal = models.ForeignKey(Recipe, on_delete=CASCADE)
+    user = models.ForeignKey(User, on_delete=CASCADE, to_field='username')
 
 @receiver(post_save, sender=User, dispatch_uid="assign calories to user")
 def userCalorie(sender, instance, created, **kwargs):

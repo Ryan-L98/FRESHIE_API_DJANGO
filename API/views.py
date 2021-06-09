@@ -1,4 +1,8 @@
+from os import execlp
 from django.contrib.auth.models import User
+from django.core import exceptions
+from django.db.models import query
+from django.http import response
 from django.utils import timezone, dateformat   
 from django.db.models import fields, manager
 from django.db.models.query import QuerySet
@@ -97,42 +101,94 @@ class consumedMealsUserWritePermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.user == request.user
 
-# @method_decorator(csrf_exempt, name='dispatch')
-# class consumedMealsView(generics.ListCreateAPIView, consumedMealsUserWritePermission):
-#     def list(self, request, *args, **kwargs):
-#         queryset = self.filter_queryset(self.get_queryset())
-#         queryset = queryset.filter(user= request.user)
-#         page = self.paginate_queryset(queryset)
-#         if page is not None:
-#             serializer = self.get_serializer(page, many=True)
-#             return self.get_paginated_response(serializer.data)
-
-#         serializer = self.get_serializer(queryset, many=True)
-#         return Response(serializer.data)
-#     queryset = models.consumedMeals.objects.all()
-#     permission_classes = [consumedMealsUserWritePermission]
-#     serializer_class = serializers.consumedMealsSerializer
-#     lookup_field = 'user'
-#     lookup_url_kwarg = 'username'
-#     name = 'consumed-meals'
-
 @api_view(["GET"])
 def getConsumedMealsToday(request, username):
     if request.user.username != username:
         return Response("INVALID USER", status=404)
-    queryset = models.consumedMeals.objects.filter(user__username= username, date=timezone.now().date())
+    queryset = models.consumedMeals.objects.filter(user= request.user , date=timezone.now())
+    len = queryset.count()
+    if len == 0:
+        return Response("You have not consumed any meals today!", status=204)
     serializer = serializers.consumedMealsSerializer(queryset, many=True)
-    return Response(serializer.data)
+    return Response(serializer.data, status=200)
 
+@api_view(["GET","DELETE"])
+def getDelConsumedMeal(request,username,pk):
+    if request.user.username != username:
+        return Response("INVALID USER", status=404)
+    try:
+        result = models.consumedMeals.objects.get(id=pk)
+    except exceptions.ObjectDoesNotExist:
+        return Response("Invalid recipe ID", status=404)
+    if request.user != result.user:
+        return Response("INVALID USER", status=404)
+    serializer = serializers.consumedMealsSerializer(result)
+    if request.method == "GET":
+        return Response(serializer.data, status=200)
+    if request.method == "DELETE":
+        result.delete()
+        return Response("Meal has been deleted successfully!", status=200)
+        
 
-@method_decorator(csrf_exempt, name='dispatch')
-class consumedMealsDeleteView(generics.RetrieveDestroyAPIView, consumedMealsUserWritePermission):
-    permission_classes = [consumedMealsUserWritePermission]
-    queryset = models.consumedMeals.objects.all()
-    serializer_class = serializers.consumedMealsSerializer
-    name = 'delete-meal'
+@api_view(["POST"])
+def addConsumedMeal(request, username):
+    if request.user.username != username:
+        return Response("INVALID USER", status=404)
+    try:
+        newMeal = models.Recipe.objects.get(id=request.data["recipeID"])
+    except exceptions.ObjectDoesNotExist:
+        return Response("Invalid Recipe ID", status=404)
+    result = models.consumedMeals(mealType=request.data["mealType"], meal=newMeal, user=request.user)
+    result.save()
+    serializer = serializers.consumedMealsSerializer(result)
+    return Response(serializer.data, status=202)
 
 #endregion
+
+#region Favourite meals
+
+@api_view(["GET"])
+def getFavMeals(request, username):
+    if request.user.username != username:
+        return Response("INVALID USER", status=404)
+    queryset = models.favouriteMeals.objects.filter(user= request.user)
+    len = queryset.count()
+    if len == 0:
+        return Response("You have not added any favourties!", status=204)
+    serializer = serializers.favouriteMealsSerializer(queryset, many=True)
+    return Response(serializer.data, status=200)
+
+@api_view(["GET","DELETE"])
+def getDelFavMeal(request, username, pk):
+    if request.user.username != username:
+        return Response("INVALID USER", status=404) 
+    try:
+        result = models.favouriteMeals.objects.get(id=pk)
+    except exceptions.ObjectDoesNotExist:
+        return Response("Invalid recipe ID", status=204)
+    if request.user != result.user:
+        return Response("INVALID USER", status=404)
+    serializer = serializers.consumedMealsSerializer(result)
+    if request.method == "GET":
+        return Response(serializer.data, status=200)
+    if request.method == "DELETE":
+        result.delete()
+        return Response("Meal has been deleted successfully!", status=202)
+
+@api_view(["POST"])
+def addFaveMeal(request, username):
+    if request.user.username != username:
+        return Response("INVALID USER", status=404)
+    try:
+        favMeal = models.Recipe.objects.get(id=request.data["recipeID"])
+    except exceptions.ObjectDoesNotExist:
+        return Response("Invalid recipe ID", status=204)
+    if models.favouriteMeals.objects.filter(meal=favMeal).exists():
+        return Response("This meal is already in your favourites", status=200)
+    result = models.favouriteMeals(meal=favMeal, user=request.user)
+    result.save()
+    serializer = serializers.favouriteMealsSerializer(result)
+    return Response(serializer.data, status=201)
 
 #region API urls
 class index(generics.GenericAPIView):
@@ -148,6 +204,9 @@ class index(generics.GenericAPIView):
             'links at da bottom' : 'Require login to view', 
             'user view' : reverse(UserDetailsViewCustom.name, request=request), 
             'calories' : '/api/<username>/calories/',
-            'consumed meals' : '/api/<username>/consumed-meals/  <-- add id to end for delete view'
+            'consumed meals' : '/api/<username>/consumed-meals/  <-- add id for details/delete view',
+            'add consumed meals' : '/api/<username>/add-consumed-meals/',
+            'favourite meals' : '/api/<username>/fav-meals/  <-- add id for details/delete view',
+            'add favourite meals' : '/api/<username>/add-fav-meals/'
         }) 
 #endregion
