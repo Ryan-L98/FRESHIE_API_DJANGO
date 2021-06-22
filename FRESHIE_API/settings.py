@@ -27,8 +27,9 @@ SECRET_KEY = 'django-insecure-f=j@hpgslv56!6%t$4rla0zd-29+myjii^3(3&p1z$w$+6tv&-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['freshie-api.herokuapp.com', '172.25.99.7']
+ALLOWED_HOSTS = ['freshie-api.herokuapp.com', '192.168.86.24']
 
+AUTH_USER_MODEL = 'API.User'
 
 # Application definition
 
@@ -164,6 +165,9 @@ REST_FRAMEWORK = {
 #rest auth serializer custom paths
 REST_AUTH_SERIALIZERS = {
     'TOKEN_SERIALIZER': 'API.models.CustomTokenSerializer' # import path to CustomTokenSerializer defined above.
+}
+REST_AUTH_REGISTER_SERIALIZERS = { 
+    'REGISTER_SERIALIZER': 'API.serializers.registerSerializer' 
 }
 
 # Default primary key field type

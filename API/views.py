@@ -1,4 +1,4 @@
-from os import execlp
+from os import execlp, stat
 from django.contrib.auth.models import User
 from django.core import exceptions
 from django.db.models import query
@@ -12,8 +12,8 @@ from rest_auth.views import UserDetailsView
 from datetime import date
 from rest_framework import permissions
 from rest_framework.fields import CurrentUserDefault
-from API.models import Recipe
-from django.shortcuts import render
+from API.models import Recipe, mealPlan
+from django.shortcuts import redirect, render
 from rest_framework import serializers, status
 from rest_framework import generics
 from rest_framework.decorators import api_view
@@ -46,7 +46,7 @@ class recipeList(generics.ListCreateAPIView):
         return super().dispatch(request, *args, **kwargs)
     permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = models.Recipe.objects.all()
-    serializer_class = serializers.RecipeSerializer
+    serializer_class = serializers.recipeSerializer
     name = 'recipe-list'
 
     def perform_create(self, serializer):
@@ -57,7 +57,7 @@ class recipeList(generics.ListCreateAPIView):
 class recipeDetails(generics.RetrieveUpdateDestroyAPIView, RecipeUserWritePermission):
     permission_classes = [RecipeUserWritePermission]
     queryset = models.Recipe.objects.all()
-    serializer_class = serializers.RecipeSerializer
+    serializer_class = serializers.recipeSerializer
     name = 'recipe-details'
 #endregion
 
@@ -73,7 +73,7 @@ class CalorieUserWritePermission(BasePermission):
 class calorieView(generics.RetrieveUpdateAPIView, CalorieUserWritePermission):
     permission_classes = [CalorieUserWritePermission]
     queryset = models.Calories.objects.all()
-    serializer_class = serializers.CalorieSerializer
+    serializer_class = serializers.calorieSerializer
     lookup_field = 'user'
     lookup_url_kwarg = 'username'
     name = 'calories'
@@ -90,6 +90,23 @@ class LoginViewCustom(LoginView):
 class RegistrationViewCustom(RegisterView):
     authentication_classes = (TokenAuthentication,)
     name = 'rest_register'
+    def create(self, request, *args, **kwargs):
+        ref = request.data["referralCode"]
+        print(ref)
+        if ref == "none":
+            response = super().create(request, *args, **kwargs)
+            custom_data = {"Signed up": "No personal Trainer", "status": "ok"}
+            response.data.update(custom_data)
+            return response
+        else:
+            try:
+                personalTrainer = models.PersonalTrainer.objects.get(referralCode= ref)
+            except exceptions.ObjectDoesNotExist:
+                return Response("INVALID REFERRAL CODE!", status=404)
+            response = super().create(request, *args, **kwargs)
+            custom_data = {"Signed up": "With personal Trainer", "status": "ok"}
+            response.data.update(custom_data)
+            return response 
 
 class UserDetailsViewCustom(UserDetailsView):
     name = 'rest_user_details'
@@ -102,10 +119,25 @@ class consumedMealsUserWritePermission(BasePermission):
         return obj.user == request.user
 
 @api_view(["GET"])
-def getConsumedMealsToday(request, username):
+def profileView(request, username):
+    print(request.user.username)
     if request.user.username != username:
+        return Response("INVALID USER", status=404) 
+    if request.user.isPersonalTrainer:
+        pt = request.user.personalTrainer
+        serializer = serializers.personalTrainerSerializer(pt)
+        return Response(serializer.data, status=200)
+    else :
+        client = request.user.client
+        serializer = serializers.clientSerializer(client)
+        return Response(serializer.data, status=200)
+
+
+@api_view(["GET"])
+def getConsumedMealsToday(request, username):
+    if request.user.username != username or request.user.isPersonalTrainer:
         return Response("INVALID USER", status=404)
-    queryset = models.consumedMeals.objects.filter(user= request.user , date=timezone.now())
+    queryset = models.consumedMeals.objects.filter(user= request.user.client , date=timezone.now())
     len = queryset.count()
     if len == 0:
         return Response("You have not consumed any meals today!", status=204)
@@ -114,7 +146,7 @@ def getConsumedMealsToday(request, username):
 
 @api_view(["GET","DELETE"])
 def getDelConsumedMeal(request,username,pk):
-    if request.user.username != username:
+    if request.user.username != username or request.user.isPersonalTrainer:
         return Response("INVALID USER", status=404)
     try:
         result = models.consumedMeals.objects.get(id=pk)
@@ -132,13 +164,13 @@ def getDelConsumedMeal(request,username,pk):
 
 @api_view(["POST"])
 def addConsumedMeal(request, username):
-    if request.user.username != username:
+    if request.user.username != username or request.user.isPersonalTrainer:
         return Response("INVALID USER", status=404)
     try:
         newMeal = models.Recipe.objects.get(id=request.data["recipeID"])
     except exceptions.ObjectDoesNotExist:
         return Response("Invalid Recipe ID", status=404)
-    result = models.consumedMeals(mealType=request.data["mealType"], meal=newMeal, user=request.user)
+    result = models.consumedMeals(mealType=request.data["mealType"], meal=newMeal, client=request.user.client)
     result.save()
     serializer = serializers.consumedMealsSerializer(result)
     return Response(serializer.data, status=202)
@@ -149,9 +181,9 @@ def addConsumedMeal(request, username):
 
 @api_view(["GET"])
 def getFavMeals(request, username):
-    if request.user.username != username:
+    if request.user.username != username or request.user.isPersonalTrainer:
         return Response("INVALID USER", status=404)
-    queryset = models.favouriteMeals.objects.filter(user= request.user)
+    queryset = models.favouriteMeals.objects.filter(client= request.user.client)
     len = queryset.count()
     if len == 0:
         return Response("You have not added any favourties!", status=204)
@@ -160,7 +192,7 @@ def getFavMeals(request, username):
 
 @api_view(["GET","DELETE"])
 def getDelFavMeal(request, username, pk):
-    if request.user.username != username:
+    if request.user.username != username or request.user.isPersonalTrainer:
         return Response("INVALID USER", status=404) 
     try:
         result = models.favouriteMeals.objects.get(id=pk)
@@ -176,7 +208,7 @@ def getDelFavMeal(request, username, pk):
         return Response("Meal has been deleted successfully!", status=202)
 
 @api_view(["POST"])
-def addFaveMeal(request, username):
+def addFavMeal(request, username):
     if request.user.username != username:
         return Response("INVALID USER", status=404)
     try:
@@ -185,10 +217,64 @@ def addFaveMeal(request, username):
         return Response("Invalid recipe ID", status=204)
     if models.favouriteMeals.objects.filter(meal=favMeal).exists():
         return Response("This meal is already in your favourites", status=200)
-    result = models.favouriteMeals(meal=favMeal, user=request.user)
+    result = models.favouriteMeals(meal=favMeal, client=request.user.client)
     result.save()
     serializer = serializers.favouriteMealsSerializer(result)
     return Response(serializer.data, status=201)
+
+@api_view(["GET"])
+def getMealPlans(request, username):
+    if request.user.username != username:
+        return Response("INVALID USER", status=404)
+    mealPlans = request.user.mealPlans
+    if mealPlans.count() == 0:
+        return Response("You do not have any meal plans!", status=204)
+    serializer = serializers.mealPlanSerializer(mealPlans)
+    return Response(serializer.data, status=201)
+
+
+@api_view(["POST"])
+def addMealPlan(request, username):
+    if request.user.username != username:
+        return Response("INVALID USER", status=404)
+    mealsID = request.data["meals"]
+    meals = models.Recipe.objects.filter(id__in= mealsID)
+    if meals.count() == 0:
+        return Response("NO RECIPES FOUND!", status=204)
+    mealPlan = models.mealPlan(title= request.data["title"])
+    mealPlan.save()
+    for meal in meals:
+        mealPlan.meal.add(meal)
+    request.user.mealPlans.add(mealPlan)
+    serializer = serializers.mealPlanSerializer(mealPlan)
+    return Response(serializer.data, status=201)
+
+@api_view(["GET","POST", "DELETE"])
+def getDelMealPlan(request, username, pk):
+    if request.user.username != username:
+        return Response("INVALID USER", status=404)
+    try:
+        mealPlan = models.mealPlan.objects.get(id=pk)
+    except exceptions.ObjectDoesNotExist:
+        return Response("Invalid meal plan ID!", status=204)
+    if request.method == "GET":
+        serializer = serializers.mealPlanSerializer(mealPlan)
+        return Response(serializer.data, status=200)
+    if request.method == "POST":
+        mealPlan.title = request.data["title"]
+        mealsID = request.data["meals"]
+        meals = models.Recipe.objects.filter(id__in= mealsID)
+        if meals.count() == 0:
+            return Response("NO RECIPES FOUND!", status=204)
+        curr = mealPlan.meal
+        mealPlan.meal.remove(*curr)
+        mealPlan.meal.add(meals)
+        mealPlan.save()
+        serializer = serializers.mealPlanSerializer(mealPlan)
+        return Response(serializer.data, status=201)
+    if request.method == "DELETE":
+        mealPlan.delete()
+        return Response("Meal plan has been deleted successfully!", status=202)
 
 #region API urls
 class index(generics.GenericAPIView):
