@@ -1,4 +1,5 @@
 from os import execlp, stat
+import datetime
 from django.contrib.auth.models import User
 from django.core import exceptions
 from django.db.models import query
@@ -203,11 +204,13 @@ def addPersonalTrainer(request, username):
     return Response(personalTrainer.username + " is now your personal trainer!", status=200)
 
 
-@api_view(["GET"])
+@api_view(["POST"])
 def getConsumedMealsOn(request, username):
     if request.user.username != username or request.user.isPersonalTrainer:
         return Response("INVALID USER", status=404)
-    queryset = models.consumedMeals.objects.filter(client= request.user.client , date=request.data["date"])
+    dateString = str(request.data["day"]) + str(request.data["month"]) + str(request.data["year"])
+    date = datetime.datetime.strptime(dateString, "%d%m%Y")
+    queryset = models.consumedMeals.objects.filter(client= request.user.client, date= date.date())
     len = queryset.count()
     if len == 0:
         return Response("You did not consume any meals!", status=204)
