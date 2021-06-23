@@ -51,6 +51,7 @@ class consumedMeals(models.Model):
     client = models.ForeignKey(Client, on_delete=CASCADE, to_field='username', related_name='consumedMeals')
     mealType = models.CharField(max_length=15, blank=True)
     date = models.DateField(blank=True, auto_now_add=True)
+    calories = models.IntegerField(default=323, null=False)
 
 class favouriteMeals(models.Model):
     meal = models.ForeignKey(Recipe, on_delete=CASCADE)

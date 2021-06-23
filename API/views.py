@@ -67,7 +67,7 @@ class recipeDetails(generics.RetrieveUpdateDestroyAPIView, RecipeUserWritePermis
 class CalorieUserWritePermission(BasePermission):
     message = 'Editing calories is restricted to assigned user only.'
     def has_object_permission(self, request, view, obj):
-        return obj.user == request.user
+        return obj.client.username == request.user.username
 
 #Calorie view
 @method_decorator(csrf_exempt, name='dispatch')
@@ -75,7 +75,7 @@ class calorieView(generics.RetrieveUpdateAPIView, CalorieUserWritePermission):
     permission_classes = [CalorieUserWritePermission]
     queryset = models.Calories.objects.all()
     serializer_class = serializers.calorieSerializer
-    lookup_field = 'user'
+    lookup_field = 'client'
     lookup_url_kwarg = 'username'
     name = 'calories'
 
@@ -93,7 +93,6 @@ class RegistrationViewCustom(RegisterView):
     name = 'rest_register'
     def create(self, request, *args, **kwargs):
         ref = request.data["referralCode"]
-        print(ref)
         if ref == "none":
             response = super().create(request, *args, **kwargs)
             custom_data = {"Signed up": "No personal Trainer", "status": "ok"}
@@ -205,15 +204,17 @@ def addPersonalTrainer(request, username):
 
 
 @api_view(["GET"])
-def getConsumedMealsToday(request, username):
+def getConsumedMealsOn(request, username):
     if request.user.username != username or request.user.isPersonalTrainer:
         return Response("INVALID USER", status=404)
-    queryset = models.consumedMeals.objects.filter(client= request.user.client , date=timezone.now())
+    queryset = models.consumedMeals.objects.filter(client= request.user.client , date=request.data["date"])
     len = queryset.count()
     if len == 0:
-        return Response("You have not consumed any meals today!", status=204)
+        return Response("You did not consume any meals!", status=204)
     serializer = serializers.consumedMealsSerializer(queryset, many=True)
     return Response(serializer.data, status=200)
+        
+    
 
 @api_view(["GET","DELETE"])
 def getDelConsumedMeal(request,username,pk):
@@ -241,7 +242,7 @@ def addConsumedMeal(request, username):
         newMeal = models.Recipe.objects.get(id=request.data["recipeID"])
     except exceptions.ObjectDoesNotExist:
         return Response("Invalid Recipe ID", status=404)
-    result = models.consumedMeals(mealType=request.data["mealType"], meal=newMeal, client=request.user.client)
+    result = models.consumedMeals(mealType=request.data["mealType"], meal=newMeal, calories= newMeal.calories, client=request.user.client)
     result.save()
     serializer = serializers.consumedMealsSerializer(result)
     return Response(serializer.data, status=202)
@@ -315,7 +316,10 @@ def addMealPlan(request, username):
     mealPlan = models.mealPlan(title= request.data["title"])
     mealPlan.save()
     for meal in meals:
-        mealPlan.meal.add(meal)
+        curr = meal
+        curr.pk = None
+        curr.save()
+        mealPlan.meal.add(curr)
     request.user.mealPlans.add(mealPlan)
     serializer = serializers.mealPlanSerializer(mealPlan)
     return Response(serializer.data, status=201)
