@@ -37,6 +37,7 @@ class registerSerializer(RegisterSerializer):
     lastName = serializers.CharField(write_only=True)
     isPersonalTrainer = serializers.BooleanField(write_only=True)
     referralCode = serializers.CharField(write_only=True)
+    calories = serializers.IntegerField(write_only=True)
     def get_cleaned_data(self):
         return {
             'username': self.validated_data.get('username', ''),
@@ -53,13 +54,13 @@ class registerSerializer(RegisterSerializer):
             personalTrainer.save()
         else:
             ref = self.validated_data.get('referralCode')
-            if ref == None:
+            if ref == "none":
                 client = models.Client(username= user.username, user= user)
             else:
                 personalTrainer = models.PersonalTrainer.objects.get(referralCode=ref)
                 client = models.Client(username= user.username, user= user, personalTrainer= personalTrainer)
             client.save()
-            clientCalories = models.Client(client= client)
+            clientCalories = models.Calories(dailyCalories= self.validated_data.get('calories'), client= client)
             clientCalories.save()
 
 class mealPlanSerializer(serializers.ModelSerializer):
@@ -82,3 +83,4 @@ class consumedMealsSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.consumedMeals
         fields = '__all__'
+        depth = 1
