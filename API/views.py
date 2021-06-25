@@ -304,6 +304,9 @@ def addFavMeal(request, username):
         return Response("Invalid recipe ID", status=204)
     if models.favouriteMeals.objects.filter(meal=favMeal).exists():
         return Response("This meal is already in your favourites", status=200)
+    favMeal.id = None
+    favMeal.author = None
+    favMeal.save()
     result = models.favouriteMeals(meal=favMeal, client=request.user.client)
     result.save()
     serializer = serializers.favouriteMealsSerializer(result)
@@ -359,7 +362,11 @@ def getDelMealPlan(request, username, pk):
             return Response("NO RECIPES FOUND!", status=204)
         curr = mealPlan.meal.all()
         mealPlan.meal.remove(*curr)
-        mealPlan.meal.add(*meals)
+        for currmeal in meals:
+            currmeal.id = None
+            currmeal.author = None
+            currmeal.save()
+            mealPlan.meal.add(currmeal)
         mealPlan.save()
         serializer = serializers.mealPlanSerializer(mealPlan)
         return Response(serializer.data, status=201)
