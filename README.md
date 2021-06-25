@@ -11,17 +11,17 @@ The freshie API provides data stored in the backend.
 ## Views
 - Class based
   - [Registration](#registration)
-  - Login
-  - Recipes
-  - Calories
+  - [Login](#login)
+  - [Recipes](#recipes)
+  - [Calories](#calories)
 - Function based
-  - profileView
-  - clientList
-  - clientProfile
-  - addPersonalTrainer
-  - getConsumedMealsOn
-  - getDelConsumedMeal
-  - addConsumedMeal
+  - [profileView](#profile)
+  - [clientList](#clientlist)
+  - [clientProfile](#clientprofile)
+  - [addPersonalTrainer](#addpersonaltrainer)
+  - [getConsumedMealsOn](#getconsumedmealson)
+  - [getDelConsumedMeal](#getdelconsumedmeal)
+  - [addConsumedMeal](#addconsumedmeal)
   - getFavMeals
   - getDelFavMeal
   - addFavMeal
@@ -38,6 +38,8 @@ Request method | API endpoint
 --- | ---                                                 
 `POST`|https://freshie-api.herokuapp.com/register/
 
+<details><summary>Sample input and output</summary>
+  
 #### Input 
 ```JSON
 {
@@ -71,6 +73,8 @@ Request method | API endpoint
     "status": "ok"
 }
 ```
+</details>
+
 ##### *key: The key returned is the authentication token that is required for further request after logging in.*
 ----
 ## Login
@@ -80,6 +84,8 @@ Request method | API endpoint
 --- | ---                                                 
 `POST`| https://freshie-api.herokuapp.com/login/
 
+<details><summary>Sample input and output</summary>
+  
 #### Input 
 ```JSON
 {
@@ -104,6 +110,9 @@ Request method | API endpoint
     }
 }
 ```
+</details>
+
+
 ##### *key: The key returned is the authentication token that is required for further request after logging in.*
 ---
 
@@ -112,6 +121,8 @@ The profile is done using a function based view, [`profileView`](./API/views.py/
 Request method | API endpoint
 --- | ---                                                 
 `GET`| https://freshie-api.herokuapp.com/api/bobby/
+
+<details><summary>Sample output</summary>
 
 #### Output
 ```JSON
@@ -139,6 +150,8 @@ Request method | API endpoint
     }
 }
 ```
+  </details>
+  
 ---
 ## Recipes
 The recipes API is done using a class based view, which extends django rest framework's [generic class views](https://github.com/encode/django-rest-framework/blob/master/rest_framework/generics.py).
@@ -146,6 +159,9 @@ Request method | API endpoint | Output
 --- | --- |  ---                                              
 `GET`| https://freshie-api.herokuapp.com/api/recipes/ | A list of the recipes
 
+<details><summary>Sample output</summary>
+
+#### Output
 ```JSON
 [
     {
@@ -200,10 +216,14 @@ Request method | API endpoint | Output
     }
 ]
 ```
----
+  </details>
+  
 Request method | API endpoint | Output
 --- | --- | ---                                               
 `GET`| https://freshie-api.herokuapp.com/api/recipes/1/ | The recipe with the recipe ID
+
+<details><summary>Sample output</summary>
+  
 #### Output
 ```JSON
 {
@@ -217,10 +237,14 @@ Request method | API endpoint | Output
     "author": "james"
 }
 ```
----
+  </details>
+  
 Request method | API endpoint | Output
 --- | --- | ---                                                
 `PATCH`| https://freshie-api.herokuapp.com/api/recipes/1/ | Updates the recipe with the recipe ID
+
+<details><summary>Sample input and output</summary>
+  
 #### Input
 ```JSON
 {
@@ -247,8 +271,10 @@ Request method | API endpoint | Output
     "author": "james"
 }
 ```
+  </details>
+  
 ##### Note: Only the author of the recipe is allowed to make changes to the recipe.
----
+
 Request method | API endpoint | Output
 --- | --- | ---                                                
 `DELETE`| https://freshie-api.herokuapp.com/api/recipes/1/ | Deletes the recipe with the recipe ID
@@ -260,6 +286,8 @@ Request method | API endpoint | Output
 --- | --- | ---                                                
 `GET`| https://freshie-api.herokuapp.com/api/bobby/calories/ | The client's calories
 
+<details><summary>Sample output</summary>
+  
 #### Output
 ```JSON
 {
@@ -269,11 +297,16 @@ Request method | API endpoint | Output
     "client": "bobby"
 }
 ```
+  </details>
+  
 ##### Note: The client will only be able to view his own calorie count.
----
+
 Request method | API endpoint | Output
 --- | --- | ---                                                
 `PATCH`| https://freshie-api.herokuapp.com/api/bobby/calories/ | Edit the client's calories
+
+<details><summary>Sample input and output</summary>
+  
 #### Input
 ```JSON
 {
@@ -290,15 +323,21 @@ Request method | API endpoint | Output
     "client": "bobby"
 }
 ```
+  </details>
+  
 ##### Note: Only the client or his personal trainer will be able to update his calories.
 
 ---
 ## Clients view as a personal trainer
 The client views are done using function based views, [`clientList`](./API/views.py) and [`clientProfile`](./API/views.py).
 
-Function | Request method | API endpoint | Output
---- | --- | --- | ---                                                
-[`clientList`](./API/views.py) | `GET`| https://freshie-api.herokuapp.com/api/james/clients/ | The personal trainer's clients
+#### [`clientList`](./API/views.py)
+Request method | API endpoint | Output
+--- | --- | ---                                                
+ `GET`| https://freshie-api.herokuapp.com/api/james/clients/ | The personal trainer's clients
+ 
+ <details><summary>Sample output</summary>
+  
 #### Output
 ```JSON
 [
@@ -372,11 +411,18 @@ Function | Request method | API endpoint | Output
     }
 ]
 ```
+  
+  </details>
+  
 ---
 
-Function | Request method | API endpoint | Output
---- | --- | --- | ---                                                
-[`clientProfile`](./API/views.py) | `GET`| https://freshie-api.herokuapp.com/api/james/client/bobby/view/ | The personal trainers client
+#### [`clientProfile`](./API/views.py)
+Request method | API endpoint | Output
+ --- | --- | ---                                                
+`GET`| https://freshie-api.herokuapp.com/api/james/client/bobby/view/ | The personal trainers client
+
+<details><summary>Sample output</summary>
+  
 #### Output
 ```JSON
 {
@@ -402,11 +448,15 @@ Function | Request method | API endpoint | Output
     }
 }
 ```
----
+  
+  </details>
 
-Function | Request method | API endpoint | Output
---- | --- | --- | ---                                                
-[`clientProfile`](./API/views.py) | `GET`| https://freshie-api.herokuapp.com/api/james/client/bobby/meal-plans/ | The meal plans the client is on
+ Request method | API endpoint | Output
+--- | --- | ---                                                
+ `GET`| https://freshie-api.herokuapp.com/api/james/client/bobby/meal-plans/ | The meal plans the client is on
+ 
+ <details><summary>Sample output</summary>
+  
 #### Output
 ```JSON
 [
@@ -438,11 +488,14 @@ Function | Request method | API endpoint | Output
     }
 ]
 ```
+</details>
 
----
-Function | Request method | API endpoint | Output
---- | --- | --- | ---                                                
-[`clientProfile`](./API/views.py) | `POST`| https://freshie-api.herokuapp.com/api/james/client/bobby/assign-meal-plan/ | Assigns a meal plan to the client
+Request method | API endpoint | Output
+ --- | --- | ---                                                
+`POST`| https://freshie-api.herokuapp.com/api/james/client/bobby/assign-meal-plan/ | Assigns a meal plan to the client
+
+<details><summary>Sample input and output</summary>
+  
 #### Input
 ```JSON
 {
@@ -454,11 +507,14 @@ Function | Request method | API endpoint | Output
 ```JSON
 "week 2 assigned to bobby!"
 ```
+  </details>
 
----
-Function | Request method | API endpoint | Output
---- | --- | --- | ---                                                
-[`clientProfile`](./API/views.py) | `DELETE`| https://freshie-api.herokuapp.com/api/james/client/bobby/remove-meal-plan/ | Deletes a meal plan the client is on
+Request method | API endpoint | Output
+ --- | --- | ---                                                
+ `DELETE`| https://freshie-api.herokuapp.com/api/james/client/bobby/remove-meal-plan/ | Deletes a meal plan the client is on
+ 
+ <details><summary>Sample input and output</summary>
+  
 #### Input
 ```JSON
 {
@@ -469,14 +525,215 @@ Function | Request method | API endpoint | Output
 ```JSON
 "Successfully removed week 2 from bobby's meal plans!"
 ```
----
-Function | Request method | API endpoint | Output
---- | --- | --- | ---                                                
-[`clientProfile`](./API/views.py) | `DELETE`| https://freshie-api.herokuapp.com/api/james/client/bobby/remove/ | Deletes client from personal trainer's clients
+  </details>
+  
+ Request method | API endpoint | Output
+--- | --- | ---                                                
+`DELETE`| https://freshie-api.herokuapp.com/api/james/client/bobby/remove/ | Deletes client from personal trainer's clients
+
+<details><summary>Sample output</summary>
+  
 #### Output
 ```JSON
 "You have successfully removed bobby as your client."
 ```
+  </details>
+
+---
+#### [`addPersonalTrainer`](./API/views.py/)
+ Request method | API endpoint | Output
+--- | --- | ---                                                
+`POST`| https://freshie-api.herokuapp.com/api/bobby/add-personal-trainer/ | Adds personal trainer to client using a referral code
+
+<details><summary>Sample input and output</summary>
+  
+#### Input
+```JSON
+{
+  "referralCode" : "JAMES1"
+}
+```
+#### Output
+```
+"James is now your personal trainer!"
+```
+  </details>
+  
+---
+#### [`getConsumedMealsOn`](./API/views.py/)
+ Request method | API endpoint | Output
+--- | --- | ---                                                
+`POST`| https://freshie-api.herokuapp.com/api/bobby/consumed-meals/ | Returns a list of the consumed meals on provided date
+
+<details><summary>Sample input and output</summary>
+  
+#### Input
+```JSON
+{
+  "day" : 24,
+  "month" : 6,
+  "year" : 2021
+}
+```
+#### Output 
+```JSON
+[
+    {
+        "id": 18,
+        "mealType": "Supper",
+        "date": "2021-06-24",
+        "calories": 123,
+        "meal": {
+            "id": 1,
+            "title": "chicken",
+            "ingredients": "chicken and egg",
+            "instructions": "cook it",
+            "calories": 123,
+            "servings": 1,
+            "custom": false,
+            "author": "james"
+        },
+        "client": {
+            "id": 1,
+            "username": "bob",
+            "user": "bob",
+            "personalTrainer": "james"
+        }
+    },
+    {
+        "id": 25,
+        "mealType": "Supper",
+        "date": "2021-06-24",
+        "calories": 123,
+        "meal": {
+            "id": 1,
+            "title": "chicken",
+            "ingredients": "chicken and egg",
+            "instructions": "cook it",
+            "calories": 123,
+            "servings": 1,
+            "custom": false,
+            "author": "james"
+        },
+        "client": {
+            "id": 1,
+            "username": "bob",
+            "user": "bob",
+            "personalTrainer": "james"
+        }
+    },
+    {
+        "id": 26,
+        "mealType": "Supper",
+        "date": "2021-06-24",
+        "calories": 321,
+        "meal": {
+            "id": 4,
+            "title": "fish",
+            "ingredients": "fish",
+            "instructions": "cook it",
+            "calories": 321,
+            "servings": 1,
+            "custom": false,
+            "author": "james"
+        },
+        "client": {
+            "id": 1,
+            "username": "bob",
+            "user": "bob",
+            "personalTrainer": "james"
+        }
+    }
+]
+```
+  
+  </details>
+  
+---
+#### [`getDelConsumedMeal`](./API/views.py/)
+ Request method | API endpoint | Output
+--- | --- | ---                                                
+`GET`| https://freshie-api.herokuapp.com/api/bobby/consumed-meal/18/ | Returns a consumed meal
+
+<details><summary>Sample output</summary>
+  
+#### Output
+```JSON 
+{
+    "id": 18,
+    "mealType": "Supper",
+    "date": "2021-06-24",
+    "calories": 123,
+    "meal": {
+        "id": 1,
+        "title": "chicken",
+        "ingredients": "chicken and egg",
+        "instructions": "cook it",
+        "calories": 123,
+        "servings": 1,
+        "custom": false,
+        "author": "james"
+    },
+    "client": {
+        "id": 1,
+        "username": "bob",
+        "user": "bob",
+        "personalTrainer": "james"
+    }
+}
+```
+  </details>
+  
+ Request method | API endpoint | Output
+--- | --- | ---                                                
+`DELETE`| https://freshie-api.herokuapp.com/api/bobby/consumed-meal/18/ | deletes a consumed meal
+---
+
+#### [`addConsumedMeal`](./API/views.py/)
+ Request method | API endpoint | Output
+--- | --- | ---                                                
+`POST`| https://freshie-api.herokuapp.com/api/bobby/add-consumed-meal/ | Adds a consumed meal to client
+
+<details><summary>Sample input and output</summary>
+  
+#### Input
+```JSON
+{
+  "mealType" : "Supper",
+  "recipeID" : 18
+}
+```
+#### Ouput
+```JSON
+{
+    "id": 18,
+    "mealType": "Supper",
+    "date": "2021-06-24",
+    "calories": 123,
+    "meal": {
+        "id": 1,
+        "title": "chicken",
+        "ingredients": "chicken and egg",
+        "instructions": "cook it",
+        "calories": 123,
+        "servings": 1,
+        "custom": false,
+        "author": "james"
+    },
+    "client": {
+        "id": 1,
+        "username": "bob",
+        "user": "bob",
+        "personalTrainer": "james"
+    }
+}
+```
+  </details>
+  
+
+
+
+
 
 
 
