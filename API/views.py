@@ -14,7 +14,7 @@ from datetime import date
 from rest_framework import permissions
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.views import exception_handler
-from API.models import Recipe, mealPlan
+from API.models import PersonalTrainer, Recipe, mealPlan
 from django.shortcuts import redirect, render
 from rest_framework import serializers, status
 from rest_framework import generics
@@ -181,6 +181,16 @@ def clientProfile(request, username, clientName, action):
                 mealPlan = request.user.mealPlans.all().get(id=request.data["mealPlanID"])
             except exceptions.ObjectDoesNotExist:
                 return Response("INVALID MEAL PLAN ID", status= 404)
+            meals = mealPlan.meal.all()
+            mealPlan.id = None
+            mealPlan.save()
+            mealPlan.meal.remove(*meals)
+            for meal in meals :
+                meal.id = None
+                meal.author = None
+                meal.save()
+                mealPlan.meal.add(meal)
+            mealPlan.save()
             client.user.mealPlans.add(mealPlan)
             return Response(mealPlan.title + " assigned to " + clientName + "!", status=200)
     return Response("Invalid method and action pair you provided: " + request.method + " and " + action + " is invalid.", status=404)
@@ -243,6 +253,8 @@ def addConsumedMeal(request, username):
         return Response("INVALID USER", status=404)
     try:
         newMeal = models.Recipe.objects.get(id=request.data["recipeID"])
+        newMeal.id = None
+        newMeal.save()
     except exceptions.ObjectDoesNotExist:
         return Response("Invalid Recipe ID", status=404)
     result = models.consumedMeals(mealType=request.data["mealType"], meal=newMeal, calories= newMeal.calories, client=request.user.client)
@@ -321,6 +333,7 @@ def addMealPlan(request, username):
     for meal in meals:
         curr = meal
         curr.pk = None
+        curr.author = None
         curr.save()
         mealPlan.meal.add(curr)
     request.user.mealPlans.add(mealPlan)
