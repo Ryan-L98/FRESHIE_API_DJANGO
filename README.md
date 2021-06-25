@@ -9,12 +9,15 @@ The freshie API provides data stored in the backend.
 2. [Django-rest-auth](https://django-rest-auth.readthedocs.io/en/latest/)
 
 ## Views
-- Class based
+- **Class based**
   - [Registration](#registration)
   - [Login](#login)
   - [Recipes](#recipes)
   - [Calories](#calories)
-- Function based
+- **Function based**
+  - [getMealPlans](#getmealplans)
+  - [addMealPlan](#addmealplan)
+  - [getDelMealPlan](#getdelmealplan)
   - [profileView](#profile)
   - [clientList](#clientlist)
   - [clientProfile](#clientprofile)
@@ -22,12 +25,10 @@ The freshie API provides data stored in the backend.
   - [getConsumedMealsOn](#getconsumedmealson)
   - [getDelConsumedMeal](#getdelconsumedmeal)
   - [addConsumedMeal](#addconsumedmeal)
-  - getFavMeals
-  - getDelFavMeal
-  - addFavMeal
-  - getMealPlans
-  - addMealPlans
-  - getDelMealPlan
+  - [getFavMeals](#getfavmeals)
+  - [getDelFavMeal](#getdelfavmeal)
+  - [addFavMeal](#addfavmeal)
+
 
 ## Documentation
 
@@ -73,6 +74,7 @@ Request method | API endpoint
     "status": "ok"
 }
 ```
+  
 </details>
 
 ##### *key: The key returned is the authentication token that is required for further request after logging in.*
@@ -150,6 +152,7 @@ Request method | API endpoint
     }
 }
 ```
+  
   </details>
   
 ---
@@ -216,6 +219,7 @@ Request method | API endpoint | Output
     }
 ]
 ```
+  
   </details>
   
 Request method | API endpoint | Output
@@ -271,6 +275,7 @@ Request method | API endpoint | Output
     "author": "james"
 }
 ```
+  
   </details>
   
 ##### Note: Only the author of the recipe is allowed to make changes to the recipe.
@@ -279,58 +284,230 @@ Request method | API endpoint | Output
 --- | --- | ---                                                
 `DELETE`| https://freshie-api.herokuapp.com/api/recipes/1/ | Deletes the recipe with the recipe ID
 ---
-## Calories
-The calories API is done using class based view, which extends django rest framework's [generic class views](https://github.com/encode/django-rest-framework/blob/master/rest_framework/generics.py).
 
+## Meal Plans
+The Meal Plans can be created, read, updated and deleted with these function based views.
+#### [`getMealPlans`](./API/views.py)
 Request method | API endpoint | Output
 --- | --- | ---                                                
-`GET`| https://freshie-api.herokuapp.com/api/bobby/calories/ | The client's calories
+ `GET`| https://freshie-api.herokuapp.com/api/bob/mealplans/ | The user's meal plans
+ 
+ <details><summary>Sample output</summary>
+
+### Output
+```JSON
+[
+  {
+      "id": 1,
+      "title": "week 1",
+      "meal": [
+          {
+              "id": 1,
+              "title": "chicken",
+              "ingredients": "chicken and egg",
+              "instructions": "cook it",
+              "calories": 123,
+              "servings": 1,
+              "custom": false,
+              "author": "james"
+          },
+          {
+              "id": 2,
+              "title": "fish",
+              "ingredients": "fish",
+              "instructions": "cook it",
+              "calories": 321,
+              "servings": 1,
+              "custom": false,
+              "author": "james"
+          }
+      ]
+  },
+  {
+      "id": 8,
+      "title": "week 2",
+      "meal": [
+          {
+              "id": 9,
+              "title": "fish",
+              "ingredients": "fish",
+              "instructions": "cook it",
+              "calories": 321,
+              "servings": 1,
+              "custom": false,
+              "author": null
+          },
+          {
+              "id": 10,
+              "title": "crab",
+              "ingredients": "crab",
+              "instructions": "cook it",
+              "calories": 213,
+              "servings": 1,
+              "custom": false,
+              "author": null
+          }
+      ]
+  }
+]
+  ```
+  
+  </details>
+  
+  ---
+  
+#### [`addMealPlan`](./API/views.py)
+Request method | API endpoint | Output
+--- | --- | ---                                                
+`POST`| https://freshie-api.herokuapp.com/api/bob/add-mealplan/ | Adds a meal plan to the user
 
 <details><summary>Sample output</summary>
   
-#### Output
+### Input
 ```JSON
 {
-    "id": 4,
-    "dailyCalories": 2000,
-    "currentCalories": 0,
-    "client": "bobby"
+  "meals" : [2,9],
+  "title" : "Week 24"
 }
-```
+  ```
+### Output
+```JSON  
+{
+    "id": 9,
+    "title": "Week 24",
+    "meal": [
+        {
+            "id": 14,
+            "title": "fish",
+            "ingredients": "fish",
+            "instructions": "cook it",
+            "calories": 321,
+            "servings": 1,
+            "custom": false,
+            "author": null
+        },
+        {
+            "id": 15,
+            "title": "fish",
+            "ingredients": "fish",
+            "instructions": "cook it",
+            "calories": 321,
+            "servings": 1,
+            "custom": false,
+            "author": null
+        }
+    ]
+}
+  ```
+  
   </details>
   
-##### Note: The client will only be able to view his own calorie count.
+  ---
+#### [`getDelMealPlan`](./API/views.py)
+Request method | API endpoint | Output
+--- | --- | ---                                                
+`GET`| https://freshie-api.herokuapp.com/api/bob/mealplan/8/ | Returns the meal plan
+
+<details><summary>Sample output</summary>
+  
+### Output
+  ```JSON
+  {
+    "id": 8,
+    "title": "week 2",
+    "meal": [
+        {
+            "id": 9,
+            "title": "fish",
+            "ingredients": "fish",
+            "instructions": "cook it",
+            "calories": 321,
+            "servings": 1,
+            "custom": false,
+            "author": null
+        },
+        {
+            "id": 10,
+            "title": "crab",
+            "ingredients": "crab",
+            "instructions": "cook it",
+            "calories": 213,
+            "servings": 1,
+            "custom": false,
+            "author": null
+        }
+    ]
+}
+  ```
+  
+  </details>
+  
+  ---
 
 Request method | API endpoint | Output
 --- | --- | ---                                                
-`PATCH`| https://freshie-api.herokuapp.com/api/bobby/calories/ | Edit the client's calories
+`POST`| https://freshie-api.herokuapp.com/api/bob/mealplan/8/ | Edits the meal plan
 
 <details><summary>Sample input and output</summary>
-  
-#### Input
-```JSON
-{
-    "currentCalories": 532
-}
-```
 
-#### Output 
+### Input
 ```JSON
 {
-    "id": 4,
-    "dailyCalories": 2000,
-    "currentCalories": 532,
-    "client": "bobby"
+  "title" : "Week 2 edited",
+  "meals" : [9,10,1]
+}
+ ```
+### Ouput
+```JSON
+{
+    "id": 8,
+    "title": "Week 2 edited",
+    "meal": [
+        {
+            "id": 16,
+            "title": "chicken",
+            "ingredients": "chicken and egg",
+            "instructions": "cook it",
+            "calories": 123,
+            "servings": 1,
+            "custom": false,
+            "author": null
+        },
+        {
+            "id": 17,
+            "title": "fish",
+            "ingredients": "fish",
+            "instructions": "cook it",
+            "calories": 321,
+            "servings": 1,
+            "custom": false,
+            "author": null
+        },
+        {
+            "id": 18,
+            "title": "crab",
+            "ingredients": "crab",
+            "instructions": "cook it",
+            "calories": 213,
+            "servings": 1,
+            "custom": false,
+            "author": null
+        }
+    ]
 }
 ```
+  
   </details>
   
-##### Note: Only the client or his personal trainer will be able to update his calories.
+  ---
+
+Request method | API endpoint | Output
+--- | --- | ---                                                
+`DELETE`| https://freshie-api.herokuapp.com/api/bob/mealplan/8/ | Deletes the meal plan
 
 ---
-## Clients view as a personal trainer
-The client views are done using function based views, [`clientList`](./API/views.py) and [`clientProfile`](./API/views.py).
-
+## Personal trainer methods
+##### *Methods that can only be used if logged in as a personal trainer.*
 #### [`clientList`](./API/views.py)
 Request method | API endpoint | Output
 --- | --- | ---                                                
@@ -525,6 +702,7 @@ Request method | API endpoint | Output
 ```JSON
 "Successfully removed week 2 from bobby's meal plans!"
 ```
+  
   </details>
   
  Request method | API endpoint | Output
@@ -537,6 +715,7 @@ Request method | API endpoint | Output
 ```JSON
 "You have successfully removed bobby as your client."
 ```
+  
   </details>
 
 ---
@@ -559,6 +738,58 @@ Request method | API endpoint | Output
 ```
   </details>
   
+---
+## Client methods
+##### *Methods that can only be used when logged in as a client.*
+
+## Calories
+The calories API is done using class based view, which extends django rest framework's [generic class views](https://github.com/encode/django-rest-framework/blob/master/rest_framework/generics.py).
+
+Request method | API endpoint | Output
+--- | --- | ---                                                
+`GET`| https://freshie-api.herokuapp.com/api/bobby/calories/ | The client's calories
+
+<details><summary>Sample output</summary>
+  
+#### Output
+```JSON
+{
+    "id": 4,
+    "dailyCalories": 2000,
+    "currentCalories": 0,
+    "client": "bobby"
+}
+```
+  </details>
+  
+##### Note: The client will only be able to view his own calorie count.
+
+Request method | API endpoint | Output
+--- | --- | ---                                                
+`PATCH`| https://freshie-api.herokuapp.com/api/bobby/calories/ | Edit the client's calories
+
+<details><summary>Sample input and output</summary>
+  
+#### Input
+```JSON
+{
+    "currentCalories": 532
+}
+```
+
+#### Output 
+```JSON
+{
+    "id": 4,
+    "dailyCalories": 2000,
+    "currentCalories": 532,
+    "client": "bobby"
+}
+```
+  </details>
+  
+##### Note: Only the client or his personal trainer will be able to update his calories.
+
 ---
 #### [`getConsumedMealsOn`](./API/views.py/)
  Request method | API endpoint | Output
@@ -730,10 +961,131 @@ Request method | API endpoint | Output
 ```
   </details>
   
+---
+#### [`getFavMeals`](./API/views.py/)
+ Request method | API endpoint | Output
+--- | --- | ---                                                
+`GET`| https://freshie-api.herokuapp.com/api/bobby/fav-meals/ | Returns a list of the client's favourite meals
 
+<details><summary>Sample output</summary>
 
+### Ouput
+```JSON
+  [
+    {
+        "id": 1,
+        "meal": {
+            "id": 11,
+            "title": "chicken",
+            "ingredients": "chicken and egg",
+            "instructions": "cook it",
+            "calories": 123,
+            "servings": 1,
+            "custom": false,
+            "author": null
+        },
+        "client": {
+            "id": 1,
+            "username": "bob",
+            "user": "bob",
+            "personalTrainer": "james"
+        }
+    },
+    {
+        "id": 2,
+        "meal": {
+            "id": 12,
+            "title": "fish",
+            "ingredients": "fish",
+            "instructions": "cook it",
+            "calories": 321,
+            "servings": 1,
+            "custom": false,
+            "author": null
+        },
+        "client": {
+            "id": 1,
+            "username": "bob",
+            "user": "bob",
+            "personalTrainer": "james"
+        }
+    }
+]
+  ```
+  </details>
+  
+  ---
+#### [`getDelFavMeal`](./API/views.py/)
+Request method | API endpoint | Output
+--- | --- | ---                                                
+`GET`| https://freshie-api.herokuapp.com/api/bobby/fav-meals/1/ | Returns the client's favourite meal
 
+<details><summary>Sample output</summary>
 
+  ### Output
+```JSON
+{
+    "id": 1,
+    "meal": {
+        "id": 11,
+        "title": "chicken",
+        "ingredients": "chicken and egg",
+        "instructions": "cook it",
+        "calories": 123,
+        "servings": 1,
+        "custom": false,
+        "author": null
+    },
+    "client": {
+        "id": 1,
+        "username": "bob",
+        "user": "bob",
+        "personalTrainer": "james"
+    }
+}
+  ```
+  
+  </details>
+
+---  
+#### [`addFavMeal`](./API/views.py/)
+Request method | API endpoint | Output
+--- | --- | ---                                                
+`POST`| https://freshie-api.herokuapp.com/api/bobby/add-fav-meal/ | Adds an existing recipe to client's favourites
+
+<details><summary>Sample input and output</summary>
+
+### Output
+```JSON
+{
+    "recipeID" : 3
+}
+```
+### Input
+```JSON
+{
+    "id": 3,
+    "meal": {
+        "id": 13,
+        "title": "crab",
+        "ingredients": "crab",
+        "instructions": "cook it",
+        "calories": 213,
+        "servings": 1,
+        "custom": false,
+        "author": null
+    },
+    "client": {
+        "id": 1,
+        "username": "bob",
+        "user": "bob",
+        "personalTrainer": "james"
+    }
+}
+  ```
+  
+  </details>
+  
 
 
 
