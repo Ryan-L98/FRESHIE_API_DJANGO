@@ -271,7 +271,7 @@ Request method | API endpoint | Output
 Request method | API endpoint | Output
 --- | --- | ---                                                
 `POST`| https://freshie-api.herokuapp.com/api/recipes/edit/1/ | Edits the recipe with the recipe ID
-
+##### Note: Only the author of the recipe is allowed to make changes to the recipe.
 <details><summary>Summary input and output</summary>
 
 #### Output
@@ -302,8 +302,6 @@ Request method | API endpoint | Output
 
 </details>
 
-##### Note: Only the author of the recipe is allowed to make changes to the recipe.
----
 Request method | API endpoint | Output
 --- | --- | ---                                                
 `DELETE`| https://freshie-api.herokuapp.com/api/recipes/edit/1/ | Deletes the recipe with the recipe ID
@@ -465,8 +463,6 @@ Request method | API endpoint | Output
   ```
   
   </details>
-  
-  ---
 
 Request method | API endpoint | Output
 --- | --- | ---                                                
@@ -522,8 +518,6 @@ Request method | API endpoint | Output
 ```
   
   </details>
-  
-  ---
 
 Request method | API endpoint | Output
 --- | --- | ---                                                
@@ -772,7 +766,7 @@ The calories API is done using class based view, which extends django rest frame
 Request method | API endpoint | Output
 --- | --- | ---                                                
 `GET`| https://freshie-api.herokuapp.com/api/bobby/calories/ | The client's calories
-
+##### Note: The client will only be able to view his own calorie count.
 <details><summary>Sample output</summary>
   
 #### Output
@@ -785,13 +779,11 @@ Request method | API endpoint | Output
 }
 ```
   </details>
-  
-##### Note: The client will only be able to view his own calorie count.
 
 Request method | API endpoint | Output
 --- | --- | ---                                                
 `PATCH`| https://freshie-api.herokuapp.com/api/bobby/calories/ | Edit the client's calories
-
+##### Note: Only the client or his personal trainer will be able to update his calories.
 <details><summary>Sample input and output</summary>
   
 #### Input
@@ -811,8 +803,6 @@ Request method | API endpoint | Output
 }
 ```
   </details>
-  
-##### Note: Only the client or his personal trainer will be able to update his calories.
 
 ---
 #### [`getConsumedMealsOn`](./API/views.py/)
@@ -1071,6 +1061,10 @@ Request method | API endpoint | Output
   
   </details>
 
+Request method | API endpoint | Output
+--- | --- | ---                                                
+`DELETE`| https://freshie-api.herokuapp.com/api/bobby/fav-meal/1/ | deletes a favourite meal
+---
 ---  
 #### [`addFavMeal`](./API/views.py/)
 Request method | API endpoint | Output
