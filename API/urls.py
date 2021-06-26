@@ -4,7 +4,8 @@ from . import views
 from django.views.decorators.csrf import csrf_exempt
 
 urlpatterns = [
-    path('recipes/', csrf_exempt(views.recipeList.as_view()), name='recipe-list'),
+    path('recipes/<variant>/', csrf_exempt(views.recipeList), name='recipe-list-variant'),
+    path('recipes/', csrf_exempt(views.recipeListOld.as_view()), name='recipe-list'),
     path('recipes/<pk>/', csrf_exempt(views.recipeDetails.as_view()), name='recipe-details'),
     path('<username>/calories/', csrf_exempt(views.calorieView.as_view()), name='calories'),
     path('<username>/consumed-meals/', csrf_exempt(views.getConsumedMealsOn), name='consumed-meals'),
@@ -20,5 +21,4 @@ urlpatterns = [
     path('<username>/clients/', csrf_exempt(views.clientList), name= 'clients'),
     path('<username>/client/<clientName>/<action>/', csrf_exempt(views.clientProfile), name= 'client-profile'),
     path('<username>/add-personal-trainer/', csrf_exempt(views.addPersonalTrainer), name= 'add-personal-trainer'),
-
 ]

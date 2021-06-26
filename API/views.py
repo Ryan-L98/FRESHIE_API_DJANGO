@@ -1,6 +1,6 @@
 from os import execlp, stat
 import datetime
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 from django.core import exceptions
 from django.db.models import query
 from django.http import response
@@ -14,7 +14,7 @@ from datetime import date
 from rest_framework import permissions
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.views import exception_handler
-from API.models import PersonalTrainer, Recipe, mealPlan
+from API.models import PersonalTrainer, Recipe, mealPlan, User
 from django.shortcuts import redirect, render
 from rest_framework import serializers, status
 from rest_framework import generics
@@ -42,7 +42,7 @@ class RecipeUserWritePermission(BasePermission):
 
 #Recipe list view
 #@method_decorator(csrf_exempt, name='dispatch')
-class recipeList(generics.ListCreateAPIView):
+class recipeListOld(generics.ListCreateAPIView):
     @csrf_exempt
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
@@ -53,6 +53,25 @@ class recipeList(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+@api_view(["GET"])
+def recipeList(request, variant):
+    if (variant == "custom"): 
+        recipes = request.user.recipes.all()
+        if (recipes.count() == 0): 
+            return Response("You have no recipes!", status=204) 
+        serializer = serializers.recipeSerializer(recipes, many=True)
+        return Response(serializer.data, status=200)
+    if (variant == "search"):
+        customRecipes = request.user.recipes.all().filter(custom=True)
+        personalTrainers = models.User.objects.filter(isPersonalTrainer=True)
+        validRecipes = models.Recipe.objects.filter(author__in=personalTrainers)
+        searchRecipes = customRecipes | validRecipes
+        serializer = serializers.recipeSerializer(searchRecipes, many=True)
+        print(searchRecipes)
+        return Response(serializer.data, status=200)
+
+
 
 #Recipe Details view
 @method_decorator(csrf_exempt, name='dispatch')
