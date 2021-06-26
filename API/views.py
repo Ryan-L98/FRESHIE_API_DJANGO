@@ -344,21 +344,24 @@ def getMealPlans(request, username):
 def addMealPlan(request, username):
     if request.user.username != username:
         return Response("INVALID USER", status=404)
-    mealsID = request.data["meals"]
-    meals = models.Recipe.objects.filter(id__in= mealsID)
-    if meals.count() == 0:
-        return Response("NO RECIPES FOUND!", status=204)
-    mealPlan = models.mealPlan(title= request.data["title"])
-    mealPlan.save()
-    for meal in meals:
-        curr = meal
-        curr.pk = None
-        curr.author = None
-        curr.save()
-        mealPlan.meal.add(curr)
-    request.user.mealPlans.add(mealPlan)
-    serializer = serializers.mealPlanSerializer(mealPlan)
-    return Response(serializer.data, status=201)
+    newMeal = models.mealPlan(title=request.data["title"])
+    newMeal.save()
+    return Response("You have added a " + newMeal.title + " as a meal plan!", status=200)
+    # mealsID = request.data["meals"]
+    # meals = models.Recipe.objects.filter(id__in= mealsID)
+    # if meals.count() == 0:
+    #     return Response("NO RECIPES FOUND!", status=204)
+    # mealPlan = models.mealPlan(title= request.data["title"])
+    # mealPlan.save()
+    # for meal in meals:
+    #     curr = meal
+    #     curr.pk = None
+    #     curr.author = None
+    #     curr.save()
+    #     mealPlan.meal.add(curr)
+    # request.user.mealPlans.add(mealPlan)
+    # serializer = serializers.mealPlanSerializer(mealPlan)
+    # return Response(serializer.data, status=201)
 
 @api_view(["GET","POST", "DELETE"])
 def getDelMealPlan(request, username, pk):
