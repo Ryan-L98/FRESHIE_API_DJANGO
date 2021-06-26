@@ -5,8 +5,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 urlpatterns = [
     path('recipes/<variant>/', csrf_exempt(views.recipeList), name='recipe-list-variant'),
-    path('recipes/', csrf_exempt(views.recipeListOld.as_view()), name='recipe-list'),
-    path('recipes/<pk>/', csrf_exempt(views.recipeDetails.as_view()), name='recipe-details'),
+    path('recipes/', csrf_exempt(views.addRecipe), name='recipe-list'),
+    path('recipes/edit/<pk>/', csrf_exempt(views.editDelRecipe), name='recipe-details'),
     path('<username>/calories/', csrf_exempt(views.calorieView.as_view()), name='calories'),
     path('<username>/consumed-meals/', csrf_exempt(views.getConsumedMealsOn), name='consumed-meals'),
     path('<username>/add-consumed-meal/', csrf_exempt(views.addConsumedMeal), name='add-consumed-meal'),

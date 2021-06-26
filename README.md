@@ -10,11 +10,13 @@ The freshie API provides data stored in the backend.
 
 ## Views
 - **Class based**
-  - [Registration](#registration)
   - [Login](#login)
   - [Recipes](#recipes)
   - [Calories](#calories)
 - **Function based**
+  - [recipeList](#recipelist)  
+  - [addRecipe](#addrecipe)  
+  - [editDelRecipe](#editdelrecipe)  
   - [getMealPlans](#getmealplans)
   - [addMealPlan](#addmealplan)
   - [getDelMealPlan](#getdelmealplan)
@@ -157,10 +159,12 @@ Request method | API endpoint
   
 ---
 ## Recipes
-The recipes API is done using a class based view, which extends django rest framework's [generic class views](https://github.com/encode/django-rest-framework/blob/master/rest_framework/generics.py).
+
+### [`recipeList`](./API/views.py)
 Request method | API endpoint | Output
 --- | --- |  ---                                              
-`GET`| https://freshie-api.herokuapp.com/api/recipes/ | A list of the recipes
+`GET`| https://freshie-api.herokuapp.com/api/recipes/custom/ | A list of the recipes created by the user
+`GET`| https://freshie-api.herokuapp.com/api/recipes/search/ | A list of the recipes created by the user and personal trainers
 
 <details><summary>Sample output</summary>
 
@@ -221,31 +225,13 @@ Request method | API endpoint | Output
 ```
   
   </details>
-  
-Request method | API endpoint | Output
---- | --- | ---                                               
-`GET`| https://freshie-api.herokuapp.com/api/recipes/1/ | The recipe with the recipe ID
 
-<details><summary>Sample output</summary>
-  
-#### Output
-```JSON
-{
-    "id": 1,
-    "title": "chicken",
-    "ingredients": "chicken",
-    "instructions": "cook it",
-    "calories": 123,
-    "servings": 1,
-    "custom": false,
-    "author": "james"
-}
-```
-  </details>
-  
+---
+### [`addRecipe`](./API/views.py)
+
 Request method | API endpoint | Output
 --- | --- | ---                                                
-`PATCH`| https://freshie-api.herokuapp.com/api/recipes/1/ | Updates the recipe with the recipe ID
+`POST`| https://freshie-api.herokuapp.com/api/recipes/ | Adds a new recipe to the database
 
 <details><summary>Sample input and output</summary>
   
@@ -278,11 +264,49 @@ Request method | API endpoint | Output
   
   </details>
   
-##### Note: Only the author of the recipe is allowed to make changes to the recipe.
 
+---
+
+### [`editDelRecipe`](./API/views.py)
 Request method | API endpoint | Output
 --- | --- | ---                                                
-`DELETE`| https://freshie-api.herokuapp.com/api/recipes/1/ | Deletes the recipe with the recipe ID
+`POST`| https://freshie-api.herokuapp.com/api/recipes/edit/1/ | Edits the recipe with the recipe ID
+
+<details><summary>Summary input and output</summary>
+
+#### Output
+```JSON
+{
+        "title": "crab",
+        "ingredients": "crab",
+        "instructions": "cook it",
+        "calories": 503,
+        "servings": 1,
+        "custom": true
+}
+```
+#### Input
+
+```JSON
+{
+    "id": 23,
+    "title": "crab",
+    "ingredients": "crab",
+    "instructions": "cook it",
+    "calories": 503,
+    "servings": 1,
+    "custom": null,
+    "author": "bob"
+}
+```
+
+</details>
+
+##### Note: Only the author of the recipe is allowed to make changes to the recipe.
+---
+Request method | API endpoint | Output
+--- | --- | ---                                                
+`DELETE`| https://freshie-api.herokuapp.com/api/recipes/edit/1/ | Deletes the recipe with the recipe ID
 ---
 
 ## Meal Plans
@@ -294,7 +318,7 @@ Request method | API endpoint | Output
  
  <details><summary>Sample output</summary>
 
-### Output
+#### Output
 ```JSON
 [
   {
@@ -363,14 +387,14 @@ Request method | API endpoint | Output
 
 <details><summary>Sample output</summary>
   
-### Input
+#### Input
 ```JSON
 {
   "meals" : [2,9],
   "title" : "Week 24"
 }
   ```
-### Output
+#### Output
 ```JSON  
 {
     "id": 9,
@@ -410,7 +434,7 @@ Request method | API endpoint | Output
 
 <details><summary>Sample output</summary>
   
-### Output
+#### Output
   ```JSON
   {
     "id": 8,
@@ -450,14 +474,14 @@ Request method | API endpoint | Output
 
 <details><summary>Sample input and output</summary>
 
-### Input
+#### Input
 ```JSON
 {
   "title" : "Week 2 edited",
   "meals" : [9,10,1]
 }
  ```
-### Ouput
+#### Ouput
 ```JSON
 {
     "id": 8,
@@ -969,7 +993,7 @@ Request method | API endpoint | Output
 
 <details><summary>Sample output</summary>
 
-### Ouput
+#### Ouput
 ```JSON
   [
     {
@@ -1022,7 +1046,7 @@ Request method | API endpoint | Output
 
 <details><summary>Sample output</summary>
 
-  ### Output
+  #### Output
 ```JSON
 {
     "id": 1,
@@ -1055,13 +1079,13 @@ Request method | API endpoint | Output
 
 <details><summary>Sample input and output</summary>
 
-### Output
+#### Output
 ```JSON
 {
     "recipeID" : 3
 }
 ```
-### Input
+#### Input
 ```JSON
 {
     "id": 3,

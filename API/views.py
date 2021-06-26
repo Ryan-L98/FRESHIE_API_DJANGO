@@ -31,29 +31,6 @@ from rest_framework.authentication import TokenAuthentication
 from rest_auth.registration.views import LoginView, RegisterView
 
 #region RECIPES
-
-#Permissions
-class RecipeUserWritePermission(BasePermission):
-    message = 'Editing recipe is restricted to the author only.'
-    def has_object_permission(self, request, view, obj):
-        if request.method in SAFE_METHODS:
-            return True
-        return obj.author == request.user
-
-#Recipe list view
-#@method_decorator(csrf_exempt, name='dispatch')
-class recipeListOld(generics.ListCreateAPIView):
-    @csrf_exempt
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    queryset = models.Recipe.objects.all()
-    serializer_class = serializers.recipeSerializer
-    name = 'recipe-list'
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
 @api_view(["GET"])
 def recipeList(request, variant):
     if (variant == "custom"): 
@@ -71,15 +48,36 @@ def recipeList(request, variant):
         print(searchRecipes)
         return Response(serializer.data, status=200)
 
+@api_view(["POST"])
+def addRecipe(request):
+    newRecipe = models.Recipe(title=request.data["title"], ingredients=request.data["ingredients"], instructions=request.data["instructions"], calories=request.data["calories"], author= request.user, custom= request.data["custom"])
+    newRecipe.save()
+    serializer = serializers.recipeSerializer(newRecipe)
+    return Response(serializer.data, status=200)
 
 
-#Recipe Details view
-@method_decorator(csrf_exempt, name='dispatch')
-class recipeDetails(generics.RetrieveUpdateDestroyAPIView, RecipeUserWritePermission):
-    permission_classes = [RecipeUserWritePermission]
-    queryset = models.Recipe.objects.all()
-    serializer_class = serializers.recipeSerializer
-    name = 'recipe-details'
+@api_view(["POST", "DELETE"])
+def editDelRecipe(request, pk):
+    try:
+        recipe = models.Recipe.objects.get(id=pk)
+    except exceptions.ObjectDoesNotExist:
+        return Response("Invalid recipe ID!", status=404)
+    if recipe.author != request.user:
+        return Response("You are not the author of this recipe!", status=404)
+
+    if request.method == "POST" :
+        recipe.title = request.data["title"]
+        recipe.ingredients = request.data["ingredients"]
+        recipe.instructions = request.data["instructions"]
+        recipe.calories = request.data["calories"]
+        recipe.save()
+        serializer = serializers.recipeSerializer(recipe)
+        return Response(serializer.data, status=201)
+    if request.method == "DELETE":
+        name = recipe.title
+        recipe.delete()
+        return Response("You have deleted the " + name + " recipe.", status=202)
+       
 #endregion
 
 #region CALORIES
