@@ -25,11 +25,11 @@ class Recipe(models.Model):
 
 class mealPlan(models.Model):
     title = models.CharField(max_length=100)
-    meal = models.ManyToManyField(Recipe, related_name='meals', null=True, blank=True)
+    meal = models.ManyToManyField(Recipe, related_name='meals', blank=True)
 
 class User(AbstractUser):
     isPersonalTrainer = models.BooleanField(null=True)
-    mealPlans = models.ManyToManyField(mealPlan, related_name="mealPlans")
+    mealPlans = models.ManyToManyField(mealPlan, related_name="user")
 
 class PersonalTrainer(models.Model):
     username = models.CharField(max_length=20, unique=True)

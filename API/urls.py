@@ -4,6 +4,7 @@ from . import views
 from django.views.decorators.csrf import csrf_exempt
 
 urlpatterns = [
+    path('<username>/weeklyCalories/', csrf_exempt(views.getWeeklyCalories), name= 'weekly-Calories'),
     path('recipes/<variant>/', csrf_exempt(views.recipeList), name='recipe-list-variant'),
     path('recipes/', csrf_exempt(views.addRecipe), name='recipe-list'),
     path('recipes/edit/<pk>/', csrf_exempt(views.editDelRecipe), name='recipe-details'),

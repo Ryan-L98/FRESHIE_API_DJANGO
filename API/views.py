@@ -14,7 +14,7 @@ from datetime import date
 from rest_framework import permissions
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.views import exception_handler
-from API.models import PersonalTrainer, Recipe, mealPlan, User
+from API.models import PersonalTrainer, Recipe, consumedMeals, mealPlan, User
 from django.shortcuts import redirect, render
 from rest_framework import serializers, status
 from rest_framework import generics
@@ -45,7 +45,6 @@ def recipeList(request, variant):
         validRecipes = models.Recipe.objects.filter(author__in=personalTrainers)
         searchRecipes = customRecipes | validRecipes
         serializer = serializers.recipeSerializer(searchRecipes, many=True)
-        print(searchRecipes)
         return Response(serializer.data, status=200)
 
 @api_view(["POST"])
@@ -232,6 +231,25 @@ def addPersonalTrainer(request, username):
 
 
 @api_view(["POST"])
+def getWeeklyCalories(request, username):
+    if request.user.username != username:
+        return Response("INVALID USER", status=404)
+    dates = request.data
+    result = []
+    for date in dates:
+        curr = 0
+        dateString = str(date["day"]) + str(date["month"]) + str(date["year"])
+        date = datetime.datetime.strptime(dateString, "%d%m%Y")
+        consumedMeals = models.consumedMeals.objects.filter(client= request.user.client, date= date.date())
+        if consumedMeals.count() != 0:
+            for consumedMeal in consumedMeals:
+                curr = curr + consumedMeal.calories
+        result.append(curr)
+    return Response(result, status=200)
+    
+
+
+@api_view(["POST"])
 def getConsumedMealsOn(request, username):
     if request.user.username != username or request.user.isPersonalTrainer:
         return Response("INVALID USER", status=404)
@@ -346,6 +364,7 @@ def addMealPlan(request, username):
         return Response("INVALID USER", status=404)
     newMeal = models.mealPlan(title=request.data["title"])
     newMeal.save()
+    newMeal.user.set((request.user,))
     return Response("You have added a " + newMeal.title + " as a meal plan!", status=200)
     # mealsID = request.data["meals"]
     # meals = models.Recipe.objects.filter(id__in= mealsID)
