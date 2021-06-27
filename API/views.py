@@ -40,11 +40,12 @@ def recipeList(request, variant):
         serializer = serializers.recipeSerializer(recipes, many=True)
         return Response(serializer.data, status=200)
     if (variant == "search"):
-        customRecipes = request.user.recipes.all().filter(custom=True)
+        customRecipes = request.user.recipes.all().filter(author= request.user)
         personalTrainers = models.User.objects.filter(isPersonalTrainer=True)
         validRecipes = models.Recipe.objects.filter(author__in=personalTrainers)
         searchRecipes = customRecipes | validRecipes
         serializer = serializers.recipeSerializer(searchRecipes, many=True)
+        print(serializer.data)
         return Response(serializer.data, status=200)
 
 @api_view(["POST"])
@@ -61,9 +62,8 @@ def editDelRecipe(request, pk):
         recipe = models.Recipe.objects.get(id=pk)
     except exceptions.ObjectDoesNotExist:
         return Response("Invalid recipe ID!", status=404)
-    if recipe.author != request.user:
-        return Response("You are not the author of this recipe!", status=404)
-
+    if recipe.author != None and recipe.author != request.user:
+        return Response("You are not the author of this recipe!", status=204)
     if request.method == "POST" :
         recipe.title = request.data["title"]
         recipe.ingredients = request.data["ingredients"]
