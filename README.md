@@ -1,5 +1,5 @@
 # FRESHIE_API_DJANGO
-The backend API for the freshie app.
+The backend API for the [freshie app](https://github.com/jamesyeap/freshie).
 
 ## Overview
 The freshie API provides data stored in the backend. 

@@ -1,11 +1,5 @@
-from django.contrib.auth.models import User
-from django.core import exceptions
 from django.contrib.auth import get_user_model
-from django.conf import settings
-from django.db.models import fields
-from django.db.models.lookups import Lookup
 from rest_framework import serializers
-from rest_framework.fields import CurrentUserDefault, ReadOnlyField
 from rest_auth.registration.serializers import RegisterSerializer
 from . import models
 

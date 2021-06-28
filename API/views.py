@@ -1,22 +1,8 @@
-from os import execlp, stat
 import datetime
 # from django.contrib.auth.models import User
 from django.core import exceptions
-from django.db.models import query
-from django.http import response
-from django.utils import timezone, dateformat   
-from django.db.models import fields, manager
-from django.db.models.query import QuerySet
-from django.http import request
-from django.http.response import Http404, HttpResponse, StreamingHttpResponse
 from rest_auth.views import UserDetailsView
-from datetime import date
-from rest_framework import permissions
-from rest_framework.fields import CurrentUserDefault
-from rest_framework.views import exception_handler
-from API.models import PersonalTrainer, Recipe, consumedMeals, mealPlan, User
-from django.shortcuts import redirect, render
-from rest_framework import serializers, status
+from rest_framework import serializers
 from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -24,9 +10,8 @@ from rest_framework.reverse import reverse
 from . import serializers
 from . import models
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import views
 from django.utils.decorators import method_decorator
-from rest_framework.permissions import SAFE_METHODS, IsAuthenticatedOrReadOnly, BasePermission, IsAdminUser, DjangoModelPermissions
+from rest_framework.permissions import BasePermission 
 from rest_framework.authentication import TokenAuthentication
 from rest_auth.registration.views import LoginView, RegisterView
 
@@ -50,11 +35,13 @@ def recipeList(request, variant):
 
 @api_view(["POST"])
 def addRecipe(request):
-    newRecipe = models.Recipe(title=request.data["title"], ingredients=request.data["ingredients"], instructions=request.data["instructions"], calories=request.data["calories"], author= request.user, custom= request.data["custom"])
-    newRecipe.save()
-    serializer = serializers.recipeSerializer(newRecipe)
+    try:
+        newRecipe = models.Recipe(title=request.data["title"], ingredients=request.data["ingredients"], instructions=request.data["instructions"], calories=request.data["calories"], author= request.user, custom= request.data["custom"])
+        newRecipe.save()
+        serializer = serializers.recipeSerializer(newRecipe)
+    except Exception as e:
+        return Response(str(e), status=404)
     return Response(serializer.data, status=200)
-
 
 @api_view(["POST", "DELETE"])
 def editDelRecipe(request, pk):

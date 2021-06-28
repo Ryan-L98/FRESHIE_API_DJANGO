@@ -1,5 +1,4 @@
-from django.urls import path, include
-from rest_framework.authentication import CSRFCheck
+from django.urls import path
 from . import views
 from django.views.decorators.csrf import csrf_exempt
 
