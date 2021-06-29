@@ -30,7 +30,7 @@ def recipeList(request, variant):
         validRecipes = models.Recipe.objects.filter(author__in=personalTrainers)
         searchRecipes = customRecipes | validRecipes
         serializer = serializers.recipeSerializer(searchRecipes, many=True)
-        print(serializer.data)
+        # print(serializer.data)
         return Response(serializer.data, status=200)
 
 @api_view(["POST"])
@@ -276,6 +276,7 @@ def addConsumedMeal(request, username):
     try:
         newMeal = models.Recipe.objects.get(id=request.data["recipeID"])
         newMeal.id = None
+        newMeal.author = None
         newMeal.save()
     except exceptions.ObjectDoesNotExist:
         return Response("Invalid Recipe ID", status=404)
@@ -384,10 +385,12 @@ def getDelMealPlan(request, username, pk):
         mealPlan.title = request.data["title"]
         mealsID = request.data["meals"]
         meals = models.Recipe.objects.filter(id__in= mealsID)
-        if meals.count() == 0:
-            return Response("NO RECIPES FOUND!", status=204)
         curr = mealPlan.meal.all()
         mealPlan.meal.remove(*curr)
+        if meals.count() == 0:
+            serializer = serializers.mealPlanSerializer(mealPlan)
+            mealPlan.save()
+            return Response(serializer.data, status=201)
         for currmeal in meals:
             currmeal.id = None
             currmeal.author = None

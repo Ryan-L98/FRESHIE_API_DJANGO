@@ -124,7 +124,7 @@ Request method | API endpoint
 The profile is done using a function based view, [`profileView`](./API/views.py/), and returns the requesting user's information 
 Request method | API endpoint
 --- | ---                                                 
-`GET`| https://freshie-api.herokuapp.com/api/bobby/
+`GET`| https://freshie-api.herokuapp.com/api/james/
 
 <details><summary>Sample output</summary>
 
