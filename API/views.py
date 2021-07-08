@@ -1,8 +1,10 @@
 import datetime
+from functools import partial
 # from django.contrib.auth.models import User
+from django.db.utils import IntegrityError
 from django.core import exceptions
 from rest_auth.views import UserDetailsView
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -90,27 +92,39 @@ class calorieView(generics.RetrieveUpdateAPIView, CalorieUserWritePermission):
 class LoginViewCustom(LoginView):
     authentication_classes = (TokenAuthentication,)
     name = 'rest_login'
+    def post(self, request, *args, **kwargs):
+        # print(request.data)
+        return super().post(request, *args, **kwargs)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class RegistrationViewCustom(RegisterView):
     authentication_classes = (TokenAuthentication,)
     name = 'rest_register'
     def create(self, request, *args, **kwargs):
-        ref = request.data["referralCode"]
-        if ref == "none":
-            response = super().create(request, *args, **kwargs)
-            custom_data = {"Signed up": "No personal Trainer", "status": "ok"}
-            response.data.update(custom_data)
-            return response
+        # print(request.data)
+        if not request.data["isPersonalTrainer"]:
+            # If the user IS-NOT signing up as a personal trainer
+            ref = request.data["referralCode"]
+            if ref == "none":
+                # if the user is not a client 
+                response = super().create(request, *args, **kwargs)
+                custom_data = {"Signed up": "No personal Trainer", "status": "ok"}
+                response.data.update(custom_data)
+                return response
+            else:
+                # if the user is a client of a personal trainer
+                try:
+                    personalTrainer = models.PersonalTrainer.objects.get(referralCode= ref)
+                except exceptions.ObjectDoesNotExist:
+                    return Response("INVALID REFERRAL CODE!", status=404)
+                response = super().create(request, *args, **kwargs)
+                custom_data = {"Signed up": "With personal Trainer", "status": "ok"}
+                response.data.update(custom_data)
+                return response 
         else:
-            try:
-                personalTrainer = models.PersonalTrainer.objects.get(referralCode= ref)
-            except exceptions.ObjectDoesNotExist:
-                return Response("INVALID REFERRAL CODE!", status=404)
+            # If the user IS signing up as a personal trainer
             response = super().create(request, *args, **kwargs)
-            custom_data = {"Signed up": "With personal Trainer", "status": "ok"}
-            response.data.update(custom_data)
-            return response 
+            return response
 
 class UserDetailsViewCustom(UserDetailsView):
     name = 'rest_user_details'
@@ -288,7 +302,6 @@ def addConsumedMeal(request, username):
 #endregion
 
 #region Favourite meals
-
 @api_view(["GET"])
 def getFavMeals(request, username):
     if request.user.username != username or request.user.isPersonalTrainer:
@@ -335,6 +348,9 @@ def addFavMeal(request, username):
     serializer = serializers.favouriteMealsSerializer(result)
     return Response(serializer.data, status=201)
 
+#endregion
+
+#region Meal plans
 @api_view(["GET"])
 def getMealPlans(request, username):
     if request.user.username != username:
@@ -402,6 +418,7 @@ def getDelMealPlan(request, username, pk):
     if request.method == "DELETE":
         mealPlan.delete()
         return Response("Meal plan has been deleted successfully!", status=202)
+#endregion
 
 #region API urls
 class index(generics.GenericAPIView):
@@ -423,3 +440,83 @@ class index(generics.GenericAPIView):
             'add favourite meals' : '/api/<username>/add-fav-meals/'
         }) 
 #endregion
+
+#region Restaurants
+
+@api_view(["GET", "POST", "PUT"])
+def getAddEditRestaurants(request, username):
+    if request.user.username != username:
+        return Response("INVALID USER", status=404)
+    if request.method == "GET":
+        restaurants = models.Restaurant.objects.all()
+        serializer = serializers.restaurantSerializer(restaurants, many=True)
+        return Response(serializer.data, status=200)
+    if request.method == "PUT":
+        try:
+            restaurantId = request.data["id"]
+            restaurant = models.Restaurant.objects.get(id=restaurantId)
+            serializer = serializers.restaurantSerializer(instance=restaurant, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                data = serializer.data
+                data["message"] = f"Updated {restaurant.name}!"
+                return Response(data, status=200)
+            return Response(serializer.errors, status= 400)
+        except (exceptions.ObjectDoesNotExist, KeyError) as e:
+            if type(e) is exceptions.ObjectDoesNotExist:
+                return Response(e.message, status=400)
+            if type(e) == KeyError:
+                return Response(f"Data is missing the {str(e)} field!", status=400)
+    if request.method == "POST":
+        try:
+            restaurant = models.Restaurant(name=request.data["name"],category=request.data["category"],address=request.data["address"], longitude=request.data["longitude"], latitude=request.data["latitude"])
+            restaurant.save()
+            return Response(f"Successfully added {restaurant.name}!", status=201)
+        except (IntegrityError, KeyError) as e:
+            if type(e) is IntegrityError:
+                return Response(str(e), status=400)
+            if type(e) == KeyError:
+                return Response(f"Data is missing the {str(e)} field!", status=400)
+
+
+@api_view(["POST", "PUT", "DELETE"])
+def addEditDelMenuItem(request, username):
+    if request.user.username != username:
+        return Response("INVALID USER", status=404)
+    if request.method == "POST":
+        menuItem = models.menuItem()
+        try:
+            restaurant = models.Restaurant.objects.get(id=request.data["restaurant"])
+        except exceptions.ObjectDoesNotExist:
+            return Response("No such restaurant!", status=400)
+        serializer = serializers.menuItemSerializer(instance=menuItem, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            data = serializer.data
+            name = data["name"]
+            data["message"] = f"Added {name} to {restaurant.name}!"
+            return Response(data, status=200)
+        return Response(serializer.errors, status=400)
+    if request.method == "PUT":
+        try:
+            menuItem = models.menuItem.objects.get(id=request.data["id"])
+            serializer = serializers.menuItemSerializer(instance=menuItem, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                data = serializer.data
+                data["message"] = f"Updated {menuItem.name} successfully!"
+                return Response(data, status=200)
+            return Response(serializer.errors, status=400)
+        except exceptions.ObjectDoesNotExist:
+            return Response("No such menu item!", status=400)
+    if request.method == "DELETE":
+        try: 
+            menuItem = models.menuItem.objects.get(id= request.data["id"])
+            name = menuItem.name
+            menuItem.delete()
+            return Response(f"Successfully deleted {name}!", status=200)
+        except exceptions.ObjectDoesNotExist:
+            return Response("No such menu item!", status=400)
+        
+        
+

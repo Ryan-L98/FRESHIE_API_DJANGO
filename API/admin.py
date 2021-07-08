@@ -9,4 +9,6 @@ admin.site.register(models.mealPlan)
 admin.site.register(models.Recipe)
 admin.site.register(models.Calories)
 admin.site.register(models.consumedMeals)
+admin.site.register(models.Restaurant)
+admin.site.register(models.menuItem)
 

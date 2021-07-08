@@ -2,27 +2,37 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_auth.registration.serializers import RegisterSerializer
 from . import models
+from rest_auth.models import TokenModel
 
-class recipeSerializer(serializers.ModelSerializer):
+class userSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Recipe
-        fields = '__all__'
-
-class favouriteMealsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.favouriteMeals
-        fields = '__all__'
-        depth = 1
+        model = models.User
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'isPersonalTrainer']
 
 class clientSerializer(serializers.ModelSerializer):
+    user = userSerializer(read_only=True)
     class Meta:
         model = models.Client
         fields = '__all__'
         depth = 1
 
 class personalTrainerSerializer(serializers.ModelSerializer):
+    user = userSerializer()
     class Meta:
         model = models.PersonalTrainer
+        fields = '__all__'
+        depth = 1
+
+class recipeSerializer(serializers.ModelSerializer):
+    author = userSerializer()
+    class Meta:
+        model = models.Recipe
+        fields = ['id', 'title', 'ingredients', 'instructions', 'calories', 'author', 'custom']
+
+class favouriteMealsSerializer(serializers.ModelSerializer):
+    client = clientSerializer()
+    class Meta:
+        model = models.favouriteMeals
         fields = '__all__'
         depth = 1
 
@@ -30,8 +40,8 @@ class registerSerializer(RegisterSerializer):
     firstName = serializers.CharField(write_only=True)
     lastName = serializers.CharField(write_only=True)
     isPersonalTrainer = serializers.BooleanField(write_only=True)
-    referralCode = serializers.CharField(write_only=True)
-    calories = serializers.IntegerField(write_only=True)
+    referralCode = serializers.CharField(write_only=True, required=False)
+    calories = serializers.IntegerField(write_only=True, required=False)
     def get_cleaned_data(self):
         return {
             'username': self.validated_data.get('username', ''),
@@ -58,6 +68,7 @@ class registerSerializer(RegisterSerializer):
             clientCalories.save()
 
 class mealPlanSerializer(serializers.ModelSerializer):
+    meal = recipeSerializer(many=True)
     class Meta:
         model = models.mealPlan
         fields = '__all__'
@@ -68,13 +79,29 @@ class calorieSerializer(serializers.ModelSerializer):
         model = models.Calories
         fields = '__all__'
 
-class userSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = get_user_model()
-        fields = '__all__'
-
 class consumedMealsSerializer(serializers.ModelSerializer):
+    meal = recipeSerializer(many=True)
+    client = clientSerializer()
     class Meta:
         model = models.consumedMeals
+        fields = '__all__'
+        depth = 1
+
+class CustomTokenSerializer(serializers.ModelSerializer):
+    user = userSerializer()
+    class Meta:
+        model = TokenModel
+        fields = ('key', 'user',)
+        depth = 1
+
+class menuItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.menuItem
+        fields = '__all__'
+
+class restaurantSerializer(serializers.ModelSerializer):
+    menuItem = menuItemSerializer(many=True)
+    class Meta: 
+        model = models.Restaurant
         fields = '__all__'
         depth = 1

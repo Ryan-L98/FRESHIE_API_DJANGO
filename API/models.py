@@ -1,8 +1,7 @@
-from django.conf import settings
+from django.conf import LazySettings, settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models.deletion import CASCADE, PROTECT, SET_NULL
-from rest_auth.models import TokenModel
 from rest_framework import serializers
 
 # Create your models here.
@@ -18,7 +17,7 @@ class Recipe(models.Model):
 
 class mealPlan(models.Model):
     title = models.CharField(max_length=100)
-    meal = models.ManyToManyField(Recipe, related_name='meals', blank=True)
+    meal = models.ManyToManyField(Recipe)
 
 class User(AbstractUser):
     isPersonalTrainer = models.BooleanField(null=True)
@@ -50,10 +49,18 @@ class favouriteMeals(models.Model):
     meal = models.ForeignKey(Recipe, on_delete=CASCADE)
     client = models.ForeignKey(Client, on_delete=CASCADE, to_field='username', related_name='favouriteMeals')
 
+class Restaurant(models.Model): 
+    name = models.CharField(max_length=20, blank=False)
+    category = models.CharField(max_length=20, blank=False)
+    address = models.CharField(max_length=100, blank=False)
+    longitude = models.DecimalField(max_digits=11, decimal_places=7, blank=False)
+    latitude = models.DecimalField(max_digits=11, decimal_places=7, blank=False)
 
-class CustomTokenSerializer(serializers.ModelSerializer):
-    user = serializers.CurrentUserDefault()
-    class Meta:
-        model = TokenModel
-        fields = ('key', 'user',)
-        depth = 1
+class menuItem(models.Model):
+    name = models.CharField(max_length=20)
+    description = models.TextField(blank=True, null=True)
+    calories = models.IntegerField(blank= False)
+    restaurant = models.ForeignKey(Restaurant, on_delete=CASCADE, related_name='menuItem')
+
+
+    

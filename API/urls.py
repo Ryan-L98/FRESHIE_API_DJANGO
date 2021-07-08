@@ -21,4 +21,7 @@ urlpatterns = [
     path('<username>/clients/', csrf_exempt(views.clientList), name= 'clients'),
     path('<username>/client/<clientName>/<action>/', csrf_exempt(views.clientProfile), name= 'client-profile'),
     path('<username>/add-personal-trainer/', csrf_exempt(views.addPersonalTrainer), name= 'add-personal-trainer'),
+    path('<username>/restaurants/', csrf_exempt(views.getAddEditRestaurants), name='restaurants'),
+    path('<username>/menu-items/', csrf_exempt(views.addEditDelMenuItem), name='menu-item'),
+
 ]
