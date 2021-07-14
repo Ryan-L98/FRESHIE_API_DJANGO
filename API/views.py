@@ -1,35 +1,37 @@
 import datetime
-from functools import partial
-# from django.contrib.auth.models import User
-from django.db.utils import IntegrityError
+
 from django.core import exceptions
+from django.db.utils import IntegrityError
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from rest_auth.registration.views import LoginView, RegisterView
 from rest_auth.views import UserDetailsView
-from rest_framework import serializers, status
-from rest_framework import generics
+from rest_framework import generics, serializers
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
+from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-from . import serializers
-from . import models
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from rest_framework.permissions import BasePermission 
-from rest_framework.authentication import TokenAuthentication
-from rest_auth.registration.views import LoginView, RegisterView
+
+from . import models, serializers
+
 
 #region RECIPES
 @api_view(["GET"])
 def recipeList(request, variant):
     if (variant == "custom"): 
-        recipes = request.user.recipes.all()
+        recipes = models.Recipe.objects.filter(author=request.user.username)
         if (recipes.count() == 0): 
             return Response("You have no recipes!", status=204) 
         serializer = serializers.recipeSerializer(recipes, many=True)
         return Response(serializer.data, status=200)
     if (variant == "search"):
-        customRecipes = request.user.recipes.all().filter(author= request.user)
+        customRecipes = models.Recipe.objects.filter(author= request.user.username)
         personalTrainers = models.User.objects.filter(isPersonalTrainer=True)
-        validRecipes = models.Recipe.objects.filter(author__in=personalTrainers)
+        ptList = []
+        for pt in personalTrainers:
+            ptList.append(pt.username)
+        validRecipes = models.Recipe.objects.filter(author__in= ptList)
         searchRecipes = customRecipes | validRecipes
         serializer = serializers.recipeSerializer(searchRecipes, many=True)
         # print(serializer.data)
@@ -37,13 +39,12 @@ def recipeList(request, variant):
 
 @api_view(["POST"])
 def addRecipe(request):
-    try:
-        newRecipe = models.Recipe(title=request.data["title"], ingredients=request.data["ingredients"], instructions=request.data["instructions"], calories=request.data["calories"], author= request.user, custom= request.data["custom"])
-        newRecipe.save()
-        serializer = serializers.recipeSerializer(newRecipe)
-    except Exception as e:
-        return Response(str(e), status=404)
-    return Response(serializer.data, status=200)
+    recipe = models.Recipe()
+    serializer = serializers.recipeSerializer(instance=recipe, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=200)
+    return Response(serializer.errors, status=400)
 
 @api_view(["POST", "DELETE"])
 def editDelRecipe(request, pk):
@@ -51,20 +52,18 @@ def editDelRecipe(request, pk):
         recipe = models.Recipe.objects.get(id=pk)
     except exceptions.ObjectDoesNotExist:
         return Response("Invalid recipe ID!", status=404)
-    if recipe.author != None and recipe.author != request.user:
+    if recipe.author != None and recipe.author != request.user.username:
         return Response("You are not the author of this recipe!", status=204)
     if request.method == "POST" :
-        recipe.title = request.data["title"]
-        recipe.ingredients = request.data["ingredients"]
-        recipe.instructions = request.data["instructions"]
-        recipe.calories = request.data["calories"]
-        recipe.save()
-        serializer = serializers.recipeSerializer(recipe)
-        return Response(serializer.data, status=201)
+        serializer = serializers.recipeSerializer(instance=recipe, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
     if request.method == "DELETE":
         name = recipe.title
         recipe.delete()
-        return Response("You have deleted the " + name + " recipe.", status=202)
+        return Response("You have deleted the " + name + " recipe.", status=200)
        
 #endregion
 
@@ -280,7 +279,7 @@ def getDelConsumedMeal(request,username,pk):
         return Response(serializer.data, status=200)
     if request.method == "DELETE":
         result.delete()
-        return Response("Meal has been deleted successfully!", status=202)
+        return Response("Meal has been deleted successfully!", status=200)
         
 
 @api_view(["POST"])
@@ -297,7 +296,7 @@ def addConsumedMeal(request, username):
     result = models.consumedMeals(mealType=request.data["mealType"], meal=newMeal, calories= newMeal.calories, client=request.user.client)
     result.save()
     serializer = serializers.consumedMealsSerializer(result)
-    return Response(serializer.data, status=202)
+    return Response(serializer.data, status=201)
 
 #endregion
 
@@ -369,7 +368,11 @@ def addMealPlan(request, username):
     newMeal = models.mealPlan(title=request.data["title"])
     newMeal.save()
     newMeal.user.set((request.user,))
-    return Response("You have added a " + newMeal.title + " as a meal plan!", status=200)
+    result = {
+        "message": f"You have added {newMeal.title} as a meal plan!",
+        "mealplanID": newMeal.id    
+    }
+    return Response(result, status=200)
     # mealsID = request.data["meals"]
     # meals = models.Recipe.objects.filter(id__in= mealsID)
     # if meals.count() == 0:
@@ -417,7 +420,7 @@ def getDelMealPlan(request, username, pk):
         return Response(serializer.data, status=201)
     if request.method == "DELETE":
         mealPlan.delete()
-        return Response("Meal plan has been deleted successfully!", status=202)
+        return Response("Meal plan has been deleted successfully!", status=200)
 #endregion
 
 #region API urls

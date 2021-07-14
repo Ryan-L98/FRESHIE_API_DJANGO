@@ -12,7 +12,7 @@ class Recipe(models.Model):
     instructions = models.TextField(blank=True, null=True)
     calories = models.IntegerField()
     servings = models.IntegerField(default=1, null=True, blank=True)
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=SET_NULL, to_field='username', editable=False, null=True, related_name='recipes')
+    author = models.CharField(max_length=20, null=True)
     custom = models.BooleanField(blank=True, null= True, default=None)
 
 class mealPlan(models.Model):

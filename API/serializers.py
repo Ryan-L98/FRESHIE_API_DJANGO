@@ -24,7 +24,6 @@ class personalTrainerSerializer(serializers.ModelSerializer):
         depth = 1
 
 class recipeSerializer(serializers.ModelSerializer):
-    author = userSerializer()
     class Meta:
         model = models.Recipe
         fields = ['id', 'title', 'ingredients', 'instructions', 'calories', 'author', 'custom']
@@ -80,7 +79,7 @@ class calorieSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class consumedMealsSerializer(serializers.ModelSerializer):
-    meal = recipeSerializer(many=True)
+    meal = recipeSerializer()
     client = clientSerializer()
     class Meta:
         model = models.consumedMeals
