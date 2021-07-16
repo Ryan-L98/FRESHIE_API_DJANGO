@@ -126,6 +126,7 @@ class RegistrationViewCustom(RegisterView):
             return response
 
 class UserDetailsViewCustom(UserDetailsView):
+    authentication_classes = (TokenAuthentication,)
     name = 'rest_user_details'
 #endregion
 
@@ -156,7 +157,7 @@ def clientList(request, username):
     personalTrainer = request.user.personalTrainer
     clients = personalTrainer.client.all()
     if clients.count() == 0:
-        return Response("You do not have any clients!")
+        return Response("You do not have any clients!", status=204)
     serializer = serializers.clientSerializer(clients, many=True)
     return Response(serializer.data, status=200)
 
@@ -168,7 +169,7 @@ def clientProfile(request, username, clientName, action):
     try:
         client = personalTrainer.client.all().get(username= clientName)
     except exceptions.ObjectDoesNotExist:
-        return Response("You do not have a client named " + clientName + "!", status=204)
+        return Response("You do not have a client named " + clientName + "!", status=404)
     if request.method == "GET":
         if action == "view":
             serializer = serializers.clientSerializer(client)
@@ -176,7 +177,7 @@ def clientProfile(request, username, clientName, action):
         if action == "meal-plans":
             mealplans = client.user.mealPlans.all()
             if mealplans.count() == 0:
-                return Response(client.username + " does not have any meal plans!", status=200)
+                return Response(client.username + " does not have any meal plans!", status=204)
             serializer = serializers.mealPlanSerializer(mealplans, many=True)
             return Response(serializer.data, status=200)
     if request.method == "DELETE":
@@ -190,7 +191,7 @@ def clientProfile(request, username, clientName, action):
             except exceptions.ObjectDoesNotExist:
                 return Response("INVALID MEAL PLAN ID", status= 404)
             client.user.mealPlans.remove(mealPlan)
-            return Response("Successfully removed " + mealPlan.title + " from " + client.username + "'s meal plans!", status=202)
+            return Response("Successfully removed " + mealPlan.title + " from " + client.username + "'s meal plans!", status=200)
     if request.method == "POST":
         if action == "assign-meal-plan":
             try: 
@@ -208,7 +209,17 @@ def clientProfile(request, username, clientName, action):
                 mealPlan.meal.add(meal)
             mealPlan.save()
             client.user.mealPlans.add(mealPlan)
-            return Response(mealPlan.title + " assigned to " + clientName + "!", status=200)
+            results = {
+                "message": mealPlan.title + " assigned to " + clientName + "!",
+                "mealplanID": mealPlan.id
+            }
+            return Response(results, status=200)
+        if action == "edit-calories":
+            clientCalories = client.calories
+            newCal = request.data["calories"]
+            clientCalories.dailyCalories = newCal
+            clientCalories.save()
+            return Response(f"{client.username}'s daily calorie limit has been changed to {newCal}.", status=200)
     return Response("Invalid method and action pair you provided: " + request.method + " and " + action + " is invalid.", status=404)
 
 @api_view(["POST"])
@@ -308,7 +319,7 @@ def getFavMeals(request, username):
     queryset = models.favouriteMeals.objects.filter(client= request.user.client)
     len = queryset.count()
     if len == 0:
-        return Response("You have not added any favourties!", status=204)
+        return Response("You have not added any favouritaes!", status=204)
     serializer = serializers.favouriteMealsSerializer(queryset, many=True)
     return Response(serializer.data, status=200)
 
@@ -319,7 +330,7 @@ def getDelFavMeal(request, username, pk):
     try:
         result = models.favouriteMeals.objects.get(id=pk)
     except exceptions.ObjectDoesNotExist:
-        return Response("Invalid recipe ID", status=204)
+        return Response("Invalid recipe ID", status=404)
     if request.user.username != result.client.username:
         return Response("INVALID USER", status=404)
     serializer = serializers.consumedMealsSerializer(result)
@@ -327,7 +338,7 @@ def getDelFavMeal(request, username, pk):
         return Response(serializer.data, status=200)
     if request.method == "DELETE":
         result.delete()
-        return Response("Meal has been deleted successfully!", status=202)
+        return Response("Meal has been deleted successfully!", status=200)
 
 @api_view(["POST"])
 def addFavMeal(request, username):

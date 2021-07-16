@@ -9,11 +9,17 @@ class userSerializer(serializers.ModelSerializer):
         model = models.User
         fields = ['id', 'username', 'first_name', 'last_name', 'email', 'isPersonalTrainer']
 
+class calorieSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Calories
+        fields = '__all__'
+
 class clientSerializer(serializers.ModelSerializer):
     user = userSerializer(read_only=True)
+    calories = calorieSerializer()
     class Meta:
         model = models.Client
-        fields = '__all__'
+        fields = ['id', 'username', 'user', 'personalTrainer', 'calories']
         depth = 1
 
 class personalTrainerSerializer(serializers.ModelSerializer):
@@ -72,11 +78,6 @@ class mealPlanSerializer(serializers.ModelSerializer):
         model = models.mealPlan
         fields = '__all__'
         depth = 1
-
-class calorieSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Calories
-        fields = '__all__'
 
 class consumedMealsSerializer(serializers.ModelSerializer):
     meal = recipeSerializer()
