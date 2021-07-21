@@ -29,7 +29,7 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', apiview.index.as_view(), name='index'),
+    path('', apiview.index, name='index'),
     path('api/', include('API.urls')),
     url(r'^login/$', csrf_exempt(apiview.LoginViewCustom.as_view()), name='rest_login'),
     # URLs that require a user to be logged in with a valid session / token.

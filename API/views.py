@@ -435,24 +435,22 @@ def getDelMealPlan(request, username, pk):
 #endregion
 
 #region API urls
-class index(generics.GenericAPIView):
-    name = 'index'
-    def get(self, request, *args, **kawrgs):
-        return Response({
-            'links below': "Do not require login to view :",
-            'login' : reverse(LoginViewCustom.name, request=request),
-            'register' : reverse(RegistrationViewCustom.name, request=request),
-            'recipelist' : reverse(recipeList.name, request=request),
-            'recipe details' : '/api/recipes/<pk>',
-            '' : '',
-            'links at da bottom' : 'Require login to view', 
-            'user view' : reverse(UserDetailsViewCustom.name, request=request), 
-            'calories' : '/api/<username>/calories/',
-            'consumed meals' : '/api/<username>/consumed-meals/  <-- add id for details/delete view',
-            'add consumed meals' : '/api/<username>/add-consumed-meals/',
-            'favourite meals' : '/api/<username>/fav-meals/  <-- add id for details/delete view',
-            'add favourite meals' : '/api/<username>/add-fav-meals/'
-        }) 
+@api_view(["GET"])
+def index(request):
+    return Response({
+        'links below': "Do not require login to view :",
+        'login' : reverse(LoginViewCustom.name, request=request),
+        'register' : reverse(RegistrationViewCustom.name, request=request),
+        'recipe details' : '/api/recipes/<pk>',
+        '' : '',
+        'links at da bottom' : 'Require login to view', 
+        'recipelist' : f"/api/recipes/<variant>/ <-- variant can either be 'search or 'custom'",
+        'calories' : '/api/<username>/calories/',
+        'consumed meals' : '/api/<username>/consumed-meals/  <-- add id for details/delete view',
+        'add consumed meals' : '/api/<username>/add-consumed-meals/',
+        'favourite meals' : '/api/<username>/fav-meals/  <-- add id for details/delete view',
+        'add favourite meals' : '/api/<username>/add-fav-meals/'
+    }) 
 #endregion
 
 #region Restaurants
@@ -473,7 +471,7 @@ def getAddEditRestaurants(request, username):
             if serializer.is_valid():
                 serializer.save()
                 data = serializer.data
-                data["message"] = f"Updated {restaurant.name}!"
+                # data["message"] = f"Updated {restaurant.name}!"
                 return Response(data, status=200)
             return Response(serializer.errors, status= 400)
         except (exceptions.ObjectDoesNotExist, KeyError) as e:
