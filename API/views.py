@@ -282,7 +282,7 @@ def getDelConsumedMeal(request,username,pk):
     try:
         result = models.consumedMeals.objects.get(id=pk)
     except exceptions.ObjectDoesNotExist:
-        return Response("Invalid recipe ID", status=404)
+        return Response("Invalid consumed meal ID", status=404)
     if request.user.username != result.client.username:
         return Response("INVALID USER", status=404)
     serializer = serializers.consumedMealsSerializer(result)
@@ -297,14 +297,14 @@ def getDelConsumedMeal(request,username,pk):
 def addConsumedMeal(request, username):
     if request.user.username != username or request.user.isPersonalTrainer:
         return Response("INVALID USER", status=404)
-    try:
-        newMeal = models.Recipe.objects.get(id=request.data["recipeID"])
-        newMeal.id = None
-        newMeal.author = None
-        newMeal.save()
-    except exceptions.ObjectDoesNotExist:
-        return Response("Invalid Recipe ID", status=404)
-    result = models.consumedMeals(mealType=request.data["mealType"], meal=newMeal, calories= newMeal.calories, client=request.user.client)
+    # try:
+    #     newMeal = models.Recipe.objects.get(id=request.data["recipeID"])
+    #     newMeal.id = None
+    #     newMeal.author = None
+    #     newMeal.save()
+    # except exceptions.ObjectDoesNotExist:
+    #     return Response("Invalid Recipe ID", status=404)
+    result = models.consumedMeals(mealType=request.data["mealType"], meal=request.data["title"], calories= request.data["calories"], client=request.user.client)
     result.save()
     serializer = serializers.consumedMealsSerializer(result)
     return Response(serializer.data, status=201)

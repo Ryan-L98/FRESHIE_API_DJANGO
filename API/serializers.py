@@ -80,7 +80,6 @@ class mealPlanSerializer(serializers.ModelSerializer):
         depth = 1
 
 class consumedMealsSerializer(serializers.ModelSerializer):
-    meal = recipeSerializer()
     client = clientSerializer()
     class Meta:
         model = models.consumedMeals
