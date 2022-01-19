@@ -1,5 +1,6 @@
 # FRESHIE_API_DJANGO
-The backend API for the [freshie app](https://github.com/jamesyeap/freshie).
+The backend API for the [freshie app](https://github.com/jamesyeap/freshie). 
+Full details about the application's features can be found on our [Gitbook](https://freshieorbital.gitbook.io/team-fitbob/).
 
 ## Overview
 The freshie API provides data stored in the backend. 
